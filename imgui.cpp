@@ -2664,7 +2664,7 @@ void ImGui::RenderFrame(ImVec2 p_min, ImVec2 p_max, ImU32 fill_col, bool border,
     const float border_size = g.Style.FrameBorderSize;
     if (border && border_size > 0.0f)
     {
-#ifdef WIN98
+#ifdef WIN98_STYLE
         WinAddRect(p_min, p_max, true);
 #else
         window->DrawList->AddRect(p_min + ImVec2(1, 1), p_max + ImVec2(1, 1), GetColorU32(ImGuiCol_BorderShadow), rounding, ImDrawCornerFlags_All, border_size);
@@ -5216,7 +5216,7 @@ static void ImGui::RenderWindowOuterBorders(ImGuiWindow* window)
     float rounding = window->WindowRounding;
     float border_size = window->WindowBorderSize;
 
-#ifdef WIN98 // window borders
+#ifdef WIN98_STYLE // window borders
     if (border_size > 0.0f && !(window->Flags & ImGuiWindowFlags_NoBackground))
         WinAddRect(window->Pos, window->Pos + window->Size, false);
 #else
@@ -5345,7 +5345,7 @@ void ImGui::RenderWindowTitleBarContents(ImGuiWindow* window, const ImRect& titl
     float pad_l = style.FramePadding.x;
     float pad_r = style.FramePadding.x;
     float button_sz = g.FontSize;
-#ifdef WIN98 // draw title bar
+#ifdef WIN98_STYLE // draw title bar
     button_sz = 16.0f;
     // pad_l = 0.0f;
     pad_r = 0.0f;
@@ -5368,10 +5368,10 @@ void ImGui::RenderWindowTitleBarContents(ImGuiWindow* window, const ImRect& titl
         pad_l += button_sz;
     }
 
-#ifdef WIN98 // windows style title bar
+#ifdef WIN98_STYLE // windows style title bar
 
     close_button_pos += ImVec2(0.0f, 2.0f);
-    collapse_button_pos += ImVec2(0.0f, 2.0f);
+    collapse_button_pos += ImVec2(2.0f, 2.0f);
 
     ImU32 col_left = IM_COL32(128,128,128,255);
     ImU32 col_right = IM_COL32(181,181,181,255);
@@ -5434,12 +5434,12 @@ void ImGui::RenderWindowTitleBarContents(ImGuiWindow* window, const ImRect& titl
         pad_r = ImMax(pad_r, pad_extend * centerness);
     }
 
-#ifdef WIN98 // windows title font
+#ifdef WIN98_STYLE // windows title font
     if (focused) PushStyleColor(ImGuiCol_Text, IM_COL32(255,255,255,255));
     else PushStyleColor(ImGuiCol_Text, IM_COL32(192,192,192,255));
     ImGuiIO& io = ImGui::GetIO();
-    ImFont* font = io.Fonts->Fonts[1]; // Assume the icon font is here. pretty bad
-    PushFont(font);
+    //ImFont* font = io.Fonts->Fonts[1]; // Assume the icon font is here. pretty bad
+    //PushFont(font);
 #endif
 
     ImRect layout_r(title_bar_rect.Min.x + pad_l, title_bar_rect.Min.y, title_bar_rect.Max.x - pad_r, title_bar_rect.Max.y);
@@ -5453,8 +5453,8 @@ void ImGui::RenderWindowTitleBarContents(ImGuiWindow* window, const ImRect& titl
         RenderTextClipped(marker_pos + off, layout_r.Max + off, UNSAVED_DOCUMENT_MARKER, NULL, NULL, ImVec2(0, style.WindowTitleAlign.y), &clip_r);
     }
 
-#ifdef WIN98
-    PopFont();
+#ifdef WIN98_STYLE
+    //PopFont();
     PopStyleColor();
 #endif
 }
@@ -6039,7 +6039,7 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
 
         // Title bar
         if (!(flags & ImGuiWindowFlags_NoTitleBar)) {
-#ifdef WIN98 // title bar sizing
+#ifdef WIN98_STYLE // title bar sizing
             ImRect inset_title_rect = title_bar_rect;
             inset_title_rect.Min += ImVec2(2.0f, 2.0f);
             inset_title_rect.Max -= ImVec2(2.0f, 0.0f);

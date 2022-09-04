@@ -668,7 +668,7 @@ bool ImGui::ButtonEx(const char* label, const ImVec2& size_arg, ImGuiButtonFlags
 
     // Render
     const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
-#ifdef WIN98
+#ifdef WIN98_STYLE
     const ImU32 fill_col = GetColorU32(ImGuiCol_WindowBg);
     window->DrawList->AddRectFilled(bb.Min, bb.Max, fill_col, 0.0f);
 
@@ -772,8 +772,8 @@ bool ImGui::CloseButton(ImGuiID id, const ImVec2& pos)//, float size)
     ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.CurrentWindow;
 
-#ifdef WIN98 // close button size
-    const ImRect bb(pos, pos + ImVec2(16.0f, 14.0f));
+#ifdef WIN98_STYLE // close button size
+    const ImRect bb(pos, pos + ImVec2(18.0f, 18.0f));
 #else
     // We intentionally allow interaction when clipped so that a mechanical Alt,Right,Validate sequence close a window.
     // (this isn't the regular behavior of buttons, but it doesn't affect the user much because navigation tends to keep items visible).
@@ -790,7 +790,7 @@ bool ImGui::CloseButton(ImGuiID id, const ImVec2& pos)//, float size)
     ImU32 col = GetColorU32(held ? ImGuiCol_ButtonActive : ImGuiCol_ButtonHovered);
     ImVec2 center = bb.GetCenter();
 
-#ifdef WIN98 // close button
+#ifdef WIN98_STYLE // close button
     const ImU32 fill_col = GetColorU32(ImGuiCol_WindowBg);
     window->DrawList->AddRectFilled(bb.Min, bb.Max, fill_col, 0.0f);
     WinAddRect(bb.Min, bb.Max, hovered && held);
@@ -802,8 +802,10 @@ bool ImGui::CloseButton(ImGuiID id, const ImVec2& pos)//, float size)
     float cross_extent = g.FontSize * 0.5f * 0.7071f - 1.0f;
     ImU32 cross_col = GetColorU32(ImGuiCol_Text);
     center -= ImVec2(0.5f, 0.5f);
-#ifdef WIN98 // close button icon
-    RenderText(bb.Min + ImVec2(2.0f, 2.0f), "\xC3\x97");
+#ifdef WIN98_STYLE // close button icon
+    //RenderText(bb.Min + ImVec2(2.0f, 2.0f), "\xC3\x97");
+    window->DrawList->AddLine(center + ImVec2(+cross_extent, +cross_extent), center + ImVec2(-cross_extent, -cross_extent), cross_col, 1.0f);
+    window->DrawList->AddLine(center + ImVec2(+cross_extent, -cross_extent), center + ImVec2(-cross_extent, +cross_extent), cross_col, 1.0f);
 #else
     window->DrawList->AddLine(center + ImVec2(+cross_extent, +cross_extent), center + ImVec2(-cross_extent, -cross_extent), cross_col, 1.0f);
     window->DrawList->AddLine(center + ImVec2(+cross_extent, -cross_extent), center + ImVec2(-cross_extent, +cross_extent), cross_col, 1.0f);
@@ -817,8 +819,8 @@ bool ImGui::CollapseButton(ImGuiID id, const ImVec2& pos)
     ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.CurrentWindow;
 
-#ifdef WIN98 // collapse button size
-    ImRect bb(pos, pos + ImVec2(16.0f, 14.0f));
+#ifdef WIN98_STYLE // collapse button size
+    ImRect bb(pos, pos + ImVec2(18.0f, 18.0f));
 #else
     ImRect bb(pos, pos + ImVec2(g.FontSize, g.FontSize) + g.Style.FramePadding * 2.0f);
 #endif
@@ -831,13 +833,13 @@ bool ImGui::CollapseButton(ImGuiID id, const ImVec2& pos)
     ImU32 text_col = GetColorU32(ImGuiCol_Text);
     ImVec2 center = bb.GetCenter();
 
-#ifdef WIN98 // collapse button
+#ifdef WIN98_STYLE // collapse button
     const ImU32 fill_col = GetColorU32(ImGuiCol_WindowBg);
     window->DrawList->AddRectFilled(bb.Min, bb.Max, fill_col, 0.0f);
     WinAddRect(bb.Min, bb.Max, hovered && held);
 
     // collapse icon
-    RenderText(bb.Min + ImVec2(2.0f, 2.0f), "\xC3\x98");
+    RenderArrow(window->DrawList, bb.Min + ImVec2(1.0f, 2.0f), text_col, window->Collapsed ? ImGuiDir_Right : ImGuiDir_Down, 0.8f);
 #else
     if (hovered || held)
         window->DrawList->AddCircleFilled(center/*+ ImVec2(0.0f, -0.5f)*/, g.FontSize * 0.5f + 1.0f, bg_col, 12);
@@ -927,7 +929,7 @@ bool ImGui::ScrollbarEx(const ImRect& bb_frame, ImGuiID id, ImGuiAxis axis, floa
     const ImGuiStyle& style = g.Style;
     const bool allow_interaction = (alpha >= 1.0f);
 
-#ifdef WIN98
+#ifdef WIN98_STYLE
 
     ImRect bb = bb_frame;
     float button_size = (axis == ImGuiAxis_X) ? bb.GetHeight() : bb.GetWidth();
@@ -994,7 +996,7 @@ bool ImGui::ScrollbarEx(const ImRect& bb_frame, ImGuiID id, ImGuiAxis axis, floa
     }
 
     // Render
-#ifdef WIN98 // scrollbar
+#ifdef WIN98_STYLE // scrollbar
 
     ImRect grab_rect;
     if (axis == ImGuiAxis_X) {

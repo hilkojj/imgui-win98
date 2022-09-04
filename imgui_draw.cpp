@@ -174,7 +174,7 @@ using namespace IMGUI_STB_NAMESPACE;
 
 void ImGui::StyleColorsDark(ImGuiStyle* dst)
 {
-#ifdef WIN98
+#ifdef WIN98_STYLE
     // These colors don't make sense with win98 so just call this anyway
     // also means I don't have to change all the examples
     StyleWin98(dst);
@@ -235,7 +235,7 @@ void ImGui::StyleColorsDark(ImGuiStyle* dst)
 
 void ImGui::StyleColorsClassic(ImGuiStyle* dst)
 {
-#ifdef WIN98
+#ifdef WIN98_STYLE
     // These colors don't make sense with win98 so just call this anyway
     // also means I don't have to change all the examples
     StyleWin98(dst);
@@ -297,7 +297,7 @@ void ImGui::StyleColorsClassic(ImGuiStyle* dst)
 // Those light colors are better suited with a thicker font than the default one + FrameBorder
 void ImGui::StyleColorsLight(ImGuiStyle* dst)
 {
-#ifdef WIN98
+#ifdef WIN98_STYLE
     // These colors don't make sense with win98 so just call this anyway
     // also means I don't have to change all the examples
     StyleWin98(dst);
@@ -358,7 +358,7 @@ void ImGui::StyleColorsLight(ImGuiStyle* dst)
 }
 
 // Windows style config
-#ifdef WIN98
+#ifdef WIN98_STYLE
 void ImGui::StyleWin98(ImGuiStyle* dst)
 {
     ImGuiStyle* style = dst ? dst : &ImGui::GetStyle();
