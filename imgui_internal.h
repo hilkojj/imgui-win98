@@ -807,7 +807,7 @@ enum ImGuiDataTypePrivate_
 struct ImGuiColorMod
 {
     ImGuiCol    Col;
-    ImVec4      BackupValue;
+    ImU32        BackupValue;
 };
 
 // Stacked style modifier, backup of modified data so we can restore it. Data type inferred from the variable.

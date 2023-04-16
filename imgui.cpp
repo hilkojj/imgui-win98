@@ -2261,9 +2261,12 @@ ImGuiStyle& ImGui::GetStyle()
 ImU32 ImGui::GetColorU32(ImGuiCol idx, float alpha_mul)
 {
     ImGuiStyle& style = GImGui->Style;
+    return style.Colors[idx];
+#if 0
     ImVec4 c = style.Colors[idx];
     c.w *= style.Alpha * alpha_mul;
     return ColorConvertFloat4ToU32(c);
+#endif
 }
 
 ImU32 ImGui::GetColorU32(const ImVec4& col)
@@ -2274,11 +2277,13 @@ ImU32 ImGui::GetColorU32(const ImVec4& col)
     return ColorConvertFloat4ToU32(c);
 }
 
+#if 0
 const ImVec4& ImGui::GetStyleColorVec4(ImGuiCol idx)
 {
     ImGuiStyle& style = GImGui->Style;
     return style.Colors[idx];
 }
+#endif
 
 ImU32 ImGui::GetColorU32(ImU32 col)
 {
@@ -2298,7 +2303,7 @@ void ImGui::PushStyleColor(ImGuiCol idx, ImU32 col)
     backup.Col = idx;
     backup.BackupValue = g.Style.Colors[idx];
     g.ColorModifiers.push_back(backup);
-    g.Style.Colors[idx] = ColorConvertU32ToFloat4(col);
+    g.Style.Colors[idx] = col;
 }
 
 void ImGui::PushStyleColor(ImGuiCol idx, const ImVec4& col)
@@ -2308,7 +2313,8 @@ void ImGui::PushStyleColor(ImGuiCol idx, const ImVec4& col)
     backup.Col = idx;
     backup.BackupValue = g.Style.Colors[idx];
     g.ColorModifiers.push_back(backup);
-    g.Style.Colors[idx] = col;
+    // TODO:
+    //g.Style.Colors[idx] = col;
 }
 
 void ImGui::PopStyleColor(int count)
@@ -3856,7 +3862,7 @@ void ImGui::UpdateDebugToolItemPicker()
         ImGui::BeginTooltip();
         ImGui::Text("HoveredId: 0x%08X", hovered_id);
         ImGui::Text("Press ESC to abort picking.");
-        ImGui::TextColored(GetStyleColorVec4(hovered_id ? ImGuiCol_Text : ImGuiCol_TextDisabled), "Click to break in debugger!");
+        ImGui::Text("Click to break in debugger!");
         ImGui::EndTooltip();
     }
 }
@@ -5382,7 +5388,10 @@ void ImGui::RenderWindowTitleBarContents(ImGuiWindow* window, const ImRect& titl
         // Windows98 colors are (0,0,128), (16,132,208)
         // This code generates the secondary color from the primary while
         // keeping the original windows colors
+        // TODO:
+        /*
         col_left = GetColorU32(ImGuiCol_TitleBgActive);
+
 
         ImVec4 secondary = GetStyleColorVec4(ImGuiCol_TitleBgActive);
         ImVec4 secondary_hsv;
@@ -5394,6 +5403,8 @@ void ImGui::RenderWindowTitleBarContents(ImGuiWindow* window, const ImRect& titl
         ColorConvertHSVtoRGB(secondary_hsv.x, secondary_hsv.y, secondary_hsv.z, secondary.x, secondary.y, secondary.z);
 
         col_right = ColorConvertFloat4ToU32(secondary);
+         */
+
     }
 
 
@@ -5435,11 +5446,11 @@ void ImGui::RenderWindowTitleBarContents(ImGuiWindow* window, const ImRect& titl
     }
 
 #ifdef WIN98_STYLE // windows title font
+    // TODO:
+    /*
     if (focused) PushStyleColor(ImGuiCol_Text, IM_COL32(255,255,255,255));
     else PushStyleColor(ImGuiCol_Text, IM_COL32(192,192,192,255));
-    ImGuiIO& io = ImGui::GetIO();
-    //ImFont* font = io.Fonts->Fonts[1]; // Assume the icon font is here. pretty bad
-    //PushFont(font);
+     */
 #endif
 
     ImRect layout_r(title_bar_rect.Min.x + pad_l, title_bar_rect.Min.y, title_bar_rect.Max.x - pad_r, title_bar_rect.Max.y);
@@ -5454,8 +5465,8 @@ void ImGui::RenderWindowTitleBarContents(ImGuiWindow* window, const ImRect& titl
     }
 
 #ifdef WIN98_STYLE
-    //PopFont();
-    PopStyleColor();
+    // TODO:
+    //PopStyleColor();
 #endif
 }
 
@@ -7588,7 +7599,9 @@ void ImGui::BeginTooltipEx(ImGuiWindowFlags extra_flags, ImGuiTooltipFlags toolt
         //ImVec2 tooltip_pos = g.IO.MousePos - g.ActiveIdClickOffset - g.Style.WindowPadding;
         ImVec2 tooltip_pos = g.IO.MousePos + ImVec2(16 * g.Style.MouseCursorScale, 8 * g.Style.MouseCursorScale);
         SetNextWindowPos(tooltip_pos);
-        SetNextWindowBgAlpha(g.Style.Colors[ImGuiCol_PopupBg].w * 0.60f);
+        // TODO:
+        //SetNextWindowBgAlpha(g.Style.Colors[ImGuiCol_PopupBg].w * 0.60f);
+
         //PushStyleVar(ImGuiStyleVar_Alpha, g.Style.Alpha * 0.60f); // This would be nice but e.g ColorButton with checkboard has issue with transparent colors :(
         tooltip_flags |= ImGuiTooltipFlags_OverridePreviousTooltip;
     }
@@ -10335,7 +10348,7 @@ void ImGui::ShowMetricsWindow(bool* p_open)
             if (draw_list == ImGui::GetWindowDrawList())
             {
                 ImGui::SameLine();
-                ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "CURRENTLY APPENDING"); // Can't display stats for active draw list! (we don't have the data double-buffered)
+                ImGui::Text("CURRENTLY APPENDING"); // Can't display stats for active draw list! (we don't have the data double-buffered)
                 if (node_open) ImGui::TreePop();
                 return;
             }
