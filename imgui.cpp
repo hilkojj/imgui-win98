@@ -940,6 +940,9 @@ ImGuiStyle::ImGuiStyle()
     CurveTessellationTol    = 1.25f;            // Tessellation tolerance when using PathBezierCurveTo() without a specific number of segments. Decrease for highly tessellated curves (higher quality, more polygons), increase to reduce quality.
     CircleSegmentMaxError   = 1.60f;            // Maximum error (in pixels) allowed when using AddCircle()/AddCircleFilled() or drawing rounded corner rectangles with no explicit segment count specified. Decrease for higher quality but more geometry.
 
+    CustomDarkenColorFunc = nullptr;
+    CustomLightenColorFunc = nullptr;
+
     // Default theme
     ImGui::StyleColorsDark(this);
 }
@@ -2444,6 +2447,7 @@ const char* ImGui::GetStyleColorName(ImGuiCol idx)
     case ImGuiCol_Button: return "Button";
     case ImGuiCol_ButtonHovered: return "ButtonHovered";
     case ImGuiCol_ButtonActive: return "ButtonActive";
+    case ImGuiCol_ButtonDisabled: return "ButtonDisabled";
     case ImGuiCol_Header: return "Header";
     case ImGuiCol_HeaderHovered: return "HeaderHovered";
     case ImGuiCol_HeaderActive: return "HeaderActive";
@@ -2662,7 +2666,7 @@ void ImGui::RenderTextEllipsis(ImDrawList* draw_list, const ImVec2& pos_min, con
 }
 
 // Render a rectangle shaped with optional rounding and borders
-void ImGui::RenderFrame(ImVec2 p_min, ImVec2 p_max, ImU32 fill_col, bool border, float rounding)
+void ImGui::RenderFrame(ImVec2 p_min, ImVec2 p_max, ImU32 fill_col, bool border, float rounding, bool bInset)
 {
     ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.CurrentWindow;
@@ -2671,7 +2675,7 @@ void ImGui::RenderFrame(ImVec2 p_min, ImVec2 p_max, ImU32 fill_col, bool border,
     if (border && border_size > 0.0f)
     {
 #ifdef WIN98_STYLE
-        WinAddRect(p_min, p_max, true);
+        WinAddRect(p_min, p_max, fill_col, bInset);
 #else
         window->DrawList->AddRect(p_min + ImVec2(1, 1), p_max + ImVec2(1, 1), GetColorU32(ImGuiCol_BorderShadow), rounding, ImDrawCornerFlags_All, border_size);
         window->DrawList->AddRect(p_min, p_max, GetColorU32(ImGuiCol_Border), rounding, ImDrawCornerFlags_All, border_size);
@@ -5175,19 +5179,24 @@ static inline void ClampWindowRect(ImGuiWindow* window, const ImRect& visibility
     window->Pos = ImClamp(window->Pos, visibility_rect.Min - size_for_clamping, visibility_rect.Max);
 }
 
-void ImGui::WinAddRect(const ImVec2& min, const ImVec2& max, bool inset)
+void ImGui::WinAddRect(const ImVec2& min, const ImVec2& max, ImU32 col, bool inset, ImU32 outline, bool bDisabled)
 {
-    ImU32 top_left = IM_COL32(255,255,255,255);
-    ImU32 bottom_right = IM_COL32(0,0,0,255);
-    ImU32 top_left_inner = IM_COL32(223,223,223,255);
-    ImU32 bottom_right_inner = IM_COL32(128,128,128,255);
+    ImGuiStyle &style = ImGui::GetStyle();
 
-    if (inset) {
+    ImU32 top_left = style.CustomLightenColorFunc
+            ? style.CustomLightenColorFunc(col, (inset ? 8.0f : 5.0f) / 8.0f) : IM_COL32(255,255,255,255);
+    ImU32 top_left_inner = style.CustomLightenColorFunc
+            ? style.CustomLightenColorFunc(col, (inset ? 5.0f : 2.0f)) : IM_COL32(255,255,255,255);
+    ImU32 bottom_right = style.CustomDarkenColorFunc
+            ? style.CustomDarkenColorFunc(col, (inset ? 8.0f : 5.0f) / 8.0f) : IM_COL32(0,0,0,255);
+    ImU32 bottom_right_inner = style.CustomDarkenColorFunc
+            ? style.CustomDarkenColorFunc(col, (inset ? 5.0f : 2.0f) / 8.0f) : IM_COL32(0,0,0,255);
+
+    if (inset)
+    {
         ImU32 tmp = top_left; top_left = bottom_right; bottom_right = tmp;
         tmp = top_left_inner; top_left_inner = bottom_right_inner; bottom_right_inner = tmp;
     }
-
-    // ImU32 fill_col = IM_COL32(192,192,192,255);
 
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     ImVec2 a = min + ImVec2(0.5f, 0.5f);
@@ -5203,16 +5212,41 @@ void ImGui::WinAddRect(const ImVec2& min, const ImVec2& max, bool inset)
     draw_list->PathLineTo(ImVec2(b.x, a.y));
     draw_list->PathStroke(bottom_right, false, 1.0f);
 
+    if (!bDisabled)
+    {
+        draw_list->PathLineTo(ImVec2(a.x, b.y) + ImVec2(1, -1));
+        draw_list->PathLineTo(a + ImVec2(1, 1));
+        draw_list->PathLineTo(ImVec2(b.x, a.y) + ImVec2(-1, 1));
+        draw_list->PathStroke(top_left_inner, false, 1.0f);
 
-    draw_list->PathLineTo(ImVec2(a.x, b.y) + ImVec2(1, -1));
-    draw_list->PathLineTo(a + ImVec2(1, 1));
-    draw_list->PathLineTo(ImVec2(b.x, a.y) + ImVec2(-1, 1));
-    draw_list->PathStroke(top_left_inner, false, 1.0f);
+        draw_list->PathLineTo(ImVec2(a.x, b.y) + ImVec2(1, -1));
+        draw_list->PathLineTo(b + ImVec2(-1, -1));
+        draw_list->PathLineTo(ImVec2(b.x, a.y) + ImVec2(-1, 1));
+        draw_list->PathStroke(bottom_right_inner, false, 1.0f);
+    }
 
-    draw_list->PathLineTo(ImVec2(a.x, b.y) + ImVec2(1, -1));
-    draw_list->PathLineTo(b + ImVec2(-1, -1));
-    draw_list->PathLineTo(ImVec2(b.x, a.y) + ImVec2(-1, 1));
-    draw_list->PathStroke(bottom_right_inner, false, 1.0f);
+    if (outline)
+    {
+        // top:
+        draw_list->PathLineTo(ImVec2(a.x, a.y - 1));
+        draw_list->PathLineTo(ImVec2(b.x + 1, a.y - 1));
+        draw_list->PathStroke(outline, false, 1.0f);
+
+        // left:
+        draw_list->PathLineTo(ImVec2(a.x - 1, a.y - 1));
+        draw_list->PathLineTo(ImVec2(a.x - 1, b.y));
+        draw_list->PathStroke(outline, false, 1.0f);
+
+        // right:
+        draw_list->PathLineTo(ImVec2(b.x + 1, a.y - 1));
+        draw_list->PathLineTo(ImVec2(b.x + 1, b.y));
+        draw_list->PathStroke(outline, false, 1.0f);
+
+        // bottom:
+        draw_list->PathLineTo(ImVec2(a.x, b.y + 1));
+        draw_list->PathLineTo(ImVec2(b.x + 1, b.y + 1));
+        draw_list->PathStroke(outline, false, 1.0f);
+    }
 }
 
 
@@ -5224,7 +5258,7 @@ static void ImGui::RenderWindowOuterBorders(ImGuiWindow* window)
 
 #ifdef WIN98_STYLE // window borders
     if (border_size > 0.0f && !(window->Flags & ImGuiWindowFlags_NoBackground))
-        WinAddRect(window->Pos, window->Pos + window->Size, false);
+        WinAddRect(window->Pos, window->Pos + window->Size, GetColorU32(ImGuiCol_WindowBg), false);
 #else
     if (border_size > 0.0f && !(window->Flags & ImGuiWindowFlags_NoBackground))
         window->DrawList->AddRect(window->Pos, window->Pos + window->Size, GetColorU32(ImGuiCol_Border), rounding, ImDrawCornerFlags_All, border_size);
@@ -5267,7 +5301,7 @@ void ImGui::RenderWindowDecorations(ImGuiWindow* window, const ImRect& title_bar
         float backup_border_size = style.FrameBorderSize;
         g.Style.FrameBorderSize = window->WindowBorderSize;
         ImU32 title_bar_col = GetColorU32((title_bar_is_highlight && !g.NavDisableHighlight) ? ImGuiCol_TitleBgActive : ImGuiCol_TitleBgCollapsed);
-        RenderFrame(title_bar_rect.Min, title_bar_rect.Max, title_bar_col, true, window_rounding);
+        RenderFrame(title_bar_rect.Min, title_bar_rect.Max, title_bar_col, true, window_rounding, false);
         g.Style.FrameBorderSize = backup_border_size;
     }
     else
@@ -5408,7 +5442,7 @@ void ImGui::RenderWindowTitleBarContents(ImGuiWindow* window, const ImRect& titl
     }
 
 
-    window->DrawList->AddRectFilledMultiColor(title_bar_rect.Min, title_bar_rect.Max, col_left, col_right, col_right, col_left);
+    //window->DrawList->AddRectFilledMultiColor(title_bar_rect.Min, title_bar_rect.Max, col_left, col_right, col_right, col_left);
 #endif
 
     // Collapse button (submitting first so it gets priority when choosing a navigation init fallback)

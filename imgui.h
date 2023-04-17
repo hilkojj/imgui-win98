@@ -780,7 +780,7 @@ namespace ImGui
     IMGUI_API void          MemFree(void* ptr);
 
     // Windows98 functions
-    IMGUI_API void          WinAddRect(const ImVec2& min, const ImVec2& max, bool inset);
+    IMGUI_API void          WinAddRect(const ImVec2& min, const ImVec2& max, ImU32 col, bool inset, ImU32 outline = 0u, bool bDisabled = false);
     IMGUI_API void          StyleWin98(ImGuiStyle* dst = NULL);
 
 
@@ -1156,6 +1156,7 @@ enum ImGuiCol_
     ImGuiCol_Button,
     ImGuiCol_ButtonHovered,
     ImGuiCol_ButtonActive,
+    ImGuiCol_ButtonDisabled,
     ImGuiCol_Header,                // Header* colors are used for CollapsingHeader, TreeNode, Selectable, MenuItem
     ImGuiCol_HeaderHovered,
     ImGuiCol_HeaderActive,
@@ -1452,6 +1453,9 @@ struct ImGuiStyle
     float       CurveTessellationTol;       // Tessellation tolerance when using PathBezierCurveTo() without a specific number of segments. Decrease for highly tessellated curves (higher quality, more polygons), increase to reduce quality.
     float       CircleSegmentMaxError;      // Maximum error (in pixels) allowed when using AddCircle()/AddCircleFilled() or drawing rounded corner rectangles with no explicit segment count specified. Decrease for higher quality but more geometry.
     ImU32       Colors[ImGuiCol_COUNT];
+
+    ImU32 (*CustomDarkenColorFunc)(ImU32 color, float darken);
+    ImU32 (*CustomLightenColorFunc)(ImU32 color, float lighten);
 
     IMGUI_API ImGuiStyle();
     IMGUI_API void ScaleAllSizes(float scale_factor);
