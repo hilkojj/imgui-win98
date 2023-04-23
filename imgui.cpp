@@ -5184,13 +5184,11 @@ void ImGui::WinAddRect(const ImVec2& min, const ImVec2& max, ImU32 col, bool ins
     ImGuiStyle &style = ImGui::GetStyle();
 
     ImU32 top_left = style.CustomLightenColorFunc
-            ? style.CustomLightenColorFunc(col, (inset ? 8.0f : 5.0f) / 8.0f) : IM_COL32(255,255,255,255);
-    ImU32 top_left_inner = style.CustomLightenColorFunc
-            ? style.CustomLightenColorFunc(col, (inset ? 5.0f : 2.0f)) : IM_COL32(255,255,255,255);
+            ? style.CustomLightenColorFunc(col, bDisabled ? 0.3f : 1.0f) : IM_COL32(255,255,255,255);
+    ImU32 top_left_inner = top_left;
     ImU32 bottom_right = style.CustomDarkenColorFunc
-            ? style.CustomDarkenColorFunc(col, (inset ? 8.0f : 5.0f) / 8.0f) : IM_COL32(0,0,0,255);
-    ImU32 bottom_right_inner = style.CustomDarkenColorFunc
-            ? style.CustomDarkenColorFunc(col, (inset ? 5.0f : 2.0f) / 8.0f) : IM_COL32(0,0,0,255);
+            ? style.CustomDarkenColorFunc(col, 1.0f) : IM_COL32(0,0,0,255);
+    ImU32 bottom_right_inner = bottom_right;
 
     if (inset)
     {
@@ -5219,10 +5217,13 @@ void ImGui::WinAddRect(const ImVec2& min, const ImVec2& max, ImU32 col, bool ins
         draw_list->PathLineTo(ImVec2(b.x, a.y) + ImVec2(-1, 1));
         draw_list->PathStroke(top_left_inner, false, 1.0f);
 
-        draw_list->PathLineTo(ImVec2(a.x, b.y) + ImVec2(1, -1));
-        draw_list->PathLineTo(b + ImVec2(-1, -1));
-        draw_list->PathLineTo(ImVec2(b.x, a.y) + ImVec2(-1, 1));
-        draw_list->PathStroke(bottom_right_inner, false, 1.0f);
+        if (inset || !outline)
+        {
+            draw_list->PathLineTo(ImVec2(a.x, b.y) + ImVec2(1, -1));
+            draw_list->PathLineTo(b + ImVec2(-1, -1));
+            draw_list->PathLineTo(ImVec2(b.x, a.y) + ImVec2(-1, 1));
+            draw_list->PathStroke(bottom_right_inner, false, 1.0f);
+        }
     }
 
     if (outline)
@@ -5242,10 +5243,24 @@ void ImGui::WinAddRect(const ImVec2& min, const ImVec2& max, ImU32 col, bool ins
         draw_list->PathLineTo(ImVec2(b.x + 1, b.y));
         draw_list->PathStroke(outline, false, 1.0f);
 
+        if (!inset && !bDisabled)
+        {
+            draw_list->PathLineTo(ImVec2(b.x + 2, a.y));
+            draw_list->PathLineTo(ImVec2(b.x + 2, b.y));
+            draw_list->PathStroke(outline, false, 1.0f);
+        }
+
         // bottom:
         draw_list->PathLineTo(ImVec2(a.x, b.y + 1));
-        draw_list->PathLineTo(ImVec2(b.x + 1, b.y + 1));
+        draw_list->PathLineTo(ImVec2(b.x + (inset ? 1 : 2), b.y + 1));
         draw_list->PathStroke(outline, false, 1.0f);
+
+        if (!inset && !bDisabled)
+        {
+            draw_list->PathLineTo(ImVec2(a.x + 1, b.y + 2));
+            draw_list->PathLineTo(ImVec2(b.x + 1, b.y + 2));
+            draw_list->PathStroke(outline, false, 1.0f);
+        }
     }
 }
 
