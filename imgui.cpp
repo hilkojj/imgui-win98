@@ -5184,11 +5184,13 @@ void ImGui::WinAddRect(const ImVec2& min, const ImVec2& max, ImU32 col, bool ins
     ImGuiStyle &style = ImGui::GetStyle();
 
     ImU32 top_left = style.CustomLightenColorFunc
-            ? style.CustomLightenColorFunc(col, bDisabled ? 0.3f : 1.0f) : IM_COL32(255,255,255,255);
-    ImU32 top_left_inner = top_left;
+        ? style.CustomLightenColorFunc(col, bDisabled ? 0.3f : 0.3f) : IM_COL32(255,255,255,255);
+    ImU32 top_left_inner = style.CustomLightenColorFunc
+        ? style.CustomLightenColorFunc(col, bDisabled ? 0.3f : 1.0f) : IM_COL32(255,255,255,255);
     ImU32 bottom_right = style.CustomDarkenColorFunc
-            ? style.CustomDarkenColorFunc(col, 1.0f) : IM_COL32(0,0,0,255);
-    ImU32 bottom_right_inner = bottom_right;
+        ? style.CustomDarkenColorFunc(col, 1.0f) : IM_COL32(0,0,0,255);
+    ImU32 bottom_right_inner = style.CustomDarkenColorFunc
+        ? style.CustomDarkenColorFunc(col, 0.5f) : IM_COL32(0,0,0,255);
 
     if (inset)
     {

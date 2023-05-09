@@ -672,10 +672,18 @@ bool ImGui::ButtonEx(const char* label, const ImVec2& size_arg, ImGuiButtonFlags
 #ifdef WIN98_STYLE
     window->DrawList->AddRectFilled(bb.Min, bb.Max, col, 0.0f);
 
-    WinAddRect(bb.Min, bb.Max, col, (held && hovered), ImGui::GetColorU32(ImGui::GetColorU32(bDisabled ? ImGuiCol_TextDisabled : ImGuiCol_Text)), bDisabled);
+    const bool bInset = held && hovered;
+    WinAddRect(bb.Min, bb.Max, col, bInset, ImGui::GetColorU32(ImGui::GetColorU32(bDisabled ? ImGuiCol_TextDisabled : ImGuiCol_Text)), bDisabled);
     // TODO:
     //PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
-    RenderTextClipped(bb.Min + style.FramePadding, bb.Max - style.FramePadding, label, NULL, &label_size, style.ButtonTextAlign, &bb);
+    ImVec2 clippedTextMin = bb.Min + style.FramePadding;
+    ImVec2 clippedTextMax = bb.Max - style.FramePadding;
+    if (bInset)
+    {
+        clippedTextMin += ImVec2(1.0f, 1.0f);
+        clippedTextMax += ImVec2(1.0f, 1.0f);
+    }
+    RenderTextClipped(clippedTextMin, clippedTextMax, label, NULL, &label_size, style.ButtonTextAlign, &bb);
     //PopStyleColor();
 #else
     RenderNavHighlight(bb, id);
@@ -1084,9 +1092,18 @@ bool ImGui::ImageButtonEx(ImGuiID id, ImTextureID texture_id, const ImVec2& size
     // Render
     const ImU32 col = GetColorU32(bDisabled ? ImGuiCol_ButtonDisabled : ((held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button));
 
+    ImVec2 imageMin = bb.Min + padding;
+    ImVec2 imageMax = bb.Max - padding;
+
 #ifdef WIN98_STYLE
     window->DrawList->AddRectFilled(bb.Min, bb.Max, col);
-    WinAddRect(bb.Min, bb.Max, col, (held && hovered) || (flags & ImGuiButtonFlags_Win98Inset), ImGui::GetColorU32(bDisabled ? ImGuiCol_TextDisabled : ImGuiCol_Text), bDisabled);
+    const bool bInset = (held && hovered) || (flags & ImGuiButtonFlags_Win98Inset);
+    WinAddRect(bb.Min, bb.Max, col, bInset, ImGui::GetColorU32(bDisabled ? ImGuiCol_TextDisabled : ImGuiCol_Text), bDisabled);
+    if (bInset)
+    {
+        imageMin += ImVec2(1.0f, 1.0f);
+        imageMax += ImVec2(1.0f, 1.0f);
+    }
 #else
     RenderNavHighlight(bb, id);
     RenderFrame(bb.Min, bb.Max, col, true, ImClamp((float)ImMin(padding.x, padding.y), 0.0f, g.Style.FrameRounding));
@@ -1098,7 +1115,7 @@ bool ImGui::ImageButtonEx(ImGuiID id, ImTextureID texture_id, const ImVec2& size
     {
         tint_col = *active_tint_col;
     }
-    window->DrawList->AddImage(texture_id, bb.Min + padding, bb.Max - padding, uv0, uv1, tint_col);
+    window->DrawList->AddImage(texture_id, imageMin, imageMax, uv0, uv1, tint_col);
 
     return pressed;
 }
