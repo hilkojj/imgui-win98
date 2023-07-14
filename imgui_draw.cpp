@@ -3224,6 +3224,9 @@ void ImFont::RenderText(ImDrawList* draw_list, float size, ImVec2 pos, ImU32 col
     ImDrawIdx* idx_write = draw_list->_IdxWritePtr;
     unsigned int vtx_current_idx = draw_list->_VtxCurrentIdx;
 
+    const float pixelWidth = 1.0f / float(this->ContainerAtlas->TexWidth);
+    const float pixelHeight = 1.0f / float(this->ContainerAtlas->TexHeight);
+
     while (s < text_end)
     {
         if (word_wrap_enabled)
@@ -3287,17 +3290,17 @@ void ImFont::RenderText(ImDrawList* draw_list, float size, ImVec2 pos, ImU32 col
         if (glyph->Visible)
         {
             // We don't do a second finer clipping test on the Y axis as we've already skipped anything before clip_rect.y and exit once we pass clip_rect.w
-            float x1 = x + glyph->X0 * scale;
-            float x2 = x + glyph->X1 * scale;
-            float y1 = y + glyph->Y0 * scale;
-            float y2 = y + glyph->Y1 * scale;
+            float x1 = x + glyph->X0 * scale - 1.0f;
+            float x2 = x + glyph->X1 * scale + 1.0f;
+            float y1 = y + glyph->Y0 * scale - 1.0f;
+            float y2 = y + glyph->Y1 * scale + 1.0f;
             if (x1 <= clip_rect.z && x2 >= clip_rect.x)
             {
                 // Render a character
-                float u1 = glyph->U0;
-                float v1 = glyph->V0;
-                float u2 = glyph->U1;
-                float v2 = glyph->V1;
+                float u1 = glyph->U0 - pixelWidth;
+                float v1 = glyph->V0 - pixelHeight;
+                float u2 = glyph->U1 + pixelWidth;
+                float v2 = glyph->V1 + pixelHeight;
 
                 // CPU side clipping used to fit text in their frame when the frame is too small. Only does clipping for axis aligned quads.
                 if (cpu_fine_clip)
