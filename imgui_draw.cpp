@@ -608,10 +608,10 @@ void ImDrawList::PrimRect(const ImVec2& a, const ImVec2& c, ImU32 col)
     ImDrawIdx idx = (ImDrawIdx)_VtxCurrentIdx;
     _IdxWritePtr[0] = idx; _IdxWritePtr[1] = (ImDrawIdx)(idx+1); _IdxWritePtr[2] = (ImDrawIdx)(idx+2);
     _IdxWritePtr[3] = idx; _IdxWritePtr[4] = (ImDrawIdx)(idx+2); _IdxWritePtr[5] = (ImDrawIdx)(idx+3);
-    _VtxWritePtr[0].pos = a; _VtxWritePtr[0].uv = uv; _VtxWritePtr[0].col = col;
-    _VtxWritePtr[1].pos = b; _VtxWritePtr[1].uv = uv; _VtxWritePtr[1].col = col;
-    _VtxWritePtr[2].pos = c; _VtxWritePtr[2].uv = uv; _VtxWritePtr[2].col = col;
-    _VtxWritePtr[3].pos = d; _VtxWritePtr[3].uv = uv; _VtxWritePtr[3].col = col;
+    _VtxWritePtr[0].pos = a; _VtxWritePtr[0].bottomRightPos = c; _VtxWritePtr[0].uv = uv; _VtxWritePtr[0].col = col;
+    _VtxWritePtr[1].pos = b; _VtxWritePtr[1].bottomRightPos = c; _VtxWritePtr[1].uv = uv; _VtxWritePtr[1].col = col;
+    _VtxWritePtr[2].pos = c; _VtxWritePtr[2].bottomRightPos = c; _VtxWritePtr[2].uv = uv; _VtxWritePtr[2].col = col;
+    _VtxWritePtr[3].pos = d; _VtxWritePtr[3].bottomRightPos = c; _VtxWritePtr[3].uv = uv; _VtxWritePtr[3].col = col;
     _VtxWritePtr += 4;
     _VtxCurrentIdx += 4;
     _IdxWritePtr += 6;
@@ -623,10 +623,10 @@ void ImDrawList::PrimRectUV(const ImVec2& a, const ImVec2& c, const ImVec2& uv_a
     ImDrawIdx idx = (ImDrawIdx)_VtxCurrentIdx;
     _IdxWritePtr[0] = idx; _IdxWritePtr[1] = (ImDrawIdx)(idx+1); _IdxWritePtr[2] = (ImDrawIdx)(idx+2);
     _IdxWritePtr[3] = idx; _IdxWritePtr[4] = (ImDrawIdx)(idx+2); _IdxWritePtr[5] = (ImDrawIdx)(idx+3);
-    _VtxWritePtr[0].pos = a; _VtxWritePtr[0].uv = uv_a; _VtxWritePtr[0].col = col;
-    _VtxWritePtr[1].pos = b; _VtxWritePtr[1].uv = uv_b; _VtxWritePtr[1].col = col;
-    _VtxWritePtr[2].pos = c; _VtxWritePtr[2].uv = uv_c; _VtxWritePtr[2].col = col;
-    _VtxWritePtr[3].pos = d; _VtxWritePtr[3].uv = uv_d; _VtxWritePtr[3].col = col;
+    _VtxWritePtr[0].pos = a; _VtxWritePtr[0].bottomRightPos = c; _VtxWritePtr[0].uv = uv_a; _VtxWritePtr[0].col = col;
+    _VtxWritePtr[1].pos = b; _VtxWritePtr[1].bottomRightPos = c; _VtxWritePtr[1].uv = uv_b; _VtxWritePtr[1].col = col;
+    _VtxWritePtr[2].pos = c; _VtxWritePtr[2].bottomRightPos = c; _VtxWritePtr[2].uv = uv_c; _VtxWritePtr[2].col = col;
+    _VtxWritePtr[3].pos = d; _VtxWritePtr[3].bottomRightPos = c; _VtxWritePtr[3].uv = uv_d; _VtxWritePtr[3].col = col;
     _VtxWritePtr += 4;
     _VtxCurrentIdx += 4;
     _IdxWritePtr += 6;
@@ -637,10 +637,10 @@ void ImDrawList::PrimQuadUV(const ImVec2& a, const ImVec2& b, const ImVec2& c, c
     ImDrawIdx idx = (ImDrawIdx)_VtxCurrentIdx;
     _IdxWritePtr[0] = idx; _IdxWritePtr[1] = (ImDrawIdx)(idx+1); _IdxWritePtr[2] = (ImDrawIdx)(idx+2);
     _IdxWritePtr[3] = idx; _IdxWritePtr[4] = (ImDrawIdx)(idx+2); _IdxWritePtr[5] = (ImDrawIdx)(idx+3);
-    _VtxWritePtr[0].pos = a; _VtxWritePtr[0].uv = uv_a; _VtxWritePtr[0].col = col;
-    _VtxWritePtr[1].pos = b; _VtxWritePtr[1].uv = uv_b; _VtxWritePtr[1].col = col;
-    _VtxWritePtr[2].pos = c; _VtxWritePtr[2].uv = uv_c; _VtxWritePtr[2].col = col;
-    _VtxWritePtr[3].pos = d; _VtxWritePtr[3].uv = uv_d; _VtxWritePtr[3].col = col;
+    _VtxWritePtr[0].pos = a; _VtxWritePtr[0].bottomRightPos = c; _VtxWritePtr[0].uv = uv_a; _VtxWritePtr[0].col = col;
+    _VtxWritePtr[1].pos = b; _VtxWritePtr[1].bottomRightPos = c; _VtxWritePtr[1].uv = uv_b; _VtxWritePtr[1].col = col;
+    _VtxWritePtr[2].pos = c; _VtxWritePtr[2].bottomRightPos = c; _VtxWritePtr[2].uv = uv_c; _VtxWritePtr[2].col = col;
+    _VtxWritePtr[3].pos = d; _VtxWritePtr[3].bottomRightPos = c; _VtxWritePtr[3].uv = uv_d; _VtxWritePtr[3].col = col;
     _VtxWritePtr += 4;
     _VtxCurrentIdx += 4;
     _IdxWritePtr += 6;
@@ -977,7 +977,10 @@ void ImDrawList::AddConvexPolyFilled(const ImVec2* points, const int points_coun
         PrimReserve(idx_count, vtx_count);
         for (int i = 0; i < vtx_count; i++)
         {
-            _VtxWritePtr[0].pos = points[i]; _VtxWritePtr[0].uv = uv; _VtxWritePtr[0].col = col;
+            _VtxWritePtr[0].pos = points[i];
+            _VtxWritePtr[0].bottomRightPos = ImVec2(0.0f, 0.0f);
+            _VtxWritePtr[0].uv = uv;
+            _VtxWritePtr[0].col = col;
             _VtxWritePtr++;
         }
         for (int i = 2; i < points_count; i++)
@@ -1148,6 +1151,13 @@ void ImDrawList::AddRectFilled(const ImVec2& p_min, const ImVec2& p_max, ImU32 c
         PrimReserve(6, 4);
         PrimRect(p_min, p_max, col);
     }
+}
+
+void ImDrawList::AddRectGradient(const ImVec2& p_min, const ImVec2& p_max, ImU32 col)
+{
+    PrimReserve(6, 4);
+    ImVec2 uv(_Data->TexUvWhitePixel.x, _Data->TexUvWhitePixel.y + 2.0f);   // + 2.0f correspondents with the gradient effect :D
+    PrimRectUV(p_min, p_max, uv, uv, col);
 }
 
 // p_min = upper-left, p_max = lower-right

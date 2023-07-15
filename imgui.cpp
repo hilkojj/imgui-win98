@@ -5343,7 +5343,7 @@ void ImGui::RenderWindowDecorations(ImGuiWindow* window, const ImRect& title_bar
         if (!(flags & ImGuiWindowFlags_NoTitleBar))
         {
             ImU32 title_bar_col = GetColorU32(title_bar_is_highlight ? ImGuiCol_TitleBgActive : ImGuiCol_TitleBg);
-            window->DrawList->AddRectFilled(title_bar_rect.Min, title_bar_rect.Max, title_bar_col, window_rounding, ImDrawCornerFlags_Top);
+            window->DrawList->AddRectGradient(title_bar_rect.Min, title_bar_rect.Max, title_bar_col);
         }
 
         // Menu bar
@@ -5497,11 +5497,8 @@ void ImGui::RenderWindowTitleBarContents(ImGuiWindow* window, const ImRect& titl
     }
 
 #ifdef WIN98_STYLE // windows title font
-    // TODO:
-    /*
-    if (focused) PushStyleColor(ImGuiCol_Text, IM_COL32(255,255,255,255));
-    else PushStyleColor(ImGuiCol_Text, IM_COL32(192,192,192,255));
-     */
+    if (focused) PushStyleColor(ImGuiCol_Text, GetColorU32(ImGuiCol_TitleTextActive));
+    else PushStyleColor(ImGuiCol_Text, GetColorU32(ImGuiCol_TitleText));
 #endif
 
     ImRect layout_r(title_bar_rect.Min.x + pad_l, title_bar_rect.Min.y, title_bar_rect.Max.x - pad_r, title_bar_rect.Max.y);
@@ -5516,8 +5513,7 @@ void ImGui::RenderWindowTitleBarContents(ImGuiWindow* window, const ImRect& titl
     }
 
 #ifdef WIN98_STYLE
-    // TODO:
-    //PopStyleColor();
+    PopStyleColor();
 #endif
 }
 

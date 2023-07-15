@@ -1145,6 +1145,8 @@ enum ImGuiCol_
     ImGuiCol_TitleBg,
     ImGuiCol_TitleBgActive,
     ImGuiCol_TitleBgCollapsed,
+    ImGuiCol_TitleText,
+    ImGuiCol_TitleTextActive,
     ImGuiCol_MenuBarBg,
     ImGuiCol_ScrollbarBg,
     ImGuiCol_ScrollbarGrab,
@@ -1157,6 +1159,8 @@ enum ImGuiCol_
     ImGuiCol_ButtonHovered,
     ImGuiCol_ButtonActive,
     ImGuiCol_ButtonDisabled,
+    ImGuiCol_ButtonText,
+    ImGuiCol_ButtonTextActive,
     ImGuiCol_Header,                // Header* colors are used for CollapsingHeader, TreeNode, Selectable, MenuItem
     ImGuiCol_HeaderHovered,
     ImGuiCol_HeaderActive,
@@ -1961,6 +1965,7 @@ typedef unsigned short ImDrawIdx;
 struct ImDrawVert
 {
     ImVec2  pos;
+    ImVec2  bottomRightPos;
     ImVec2  uv;
     ImU32   col;
 };
@@ -2070,6 +2075,7 @@ struct ImDrawList
     IMGUI_API void  AddLine(const ImVec2& p1, const ImVec2& p2, ImU32 col, float thickness = 1.0f);
     IMGUI_API void  AddRect(const ImVec2& p_min, const ImVec2& p_max, ImU32 col, float rounding = 0.0f, ImDrawCornerFlags rounding_corners = ImDrawCornerFlags_All, float thickness = 1.0f);   // a: upper-left, b: lower-right (== upper-left + size), rounding_corners_flags: 4 bits corresponding to which corner to round
     IMGUI_API void  AddRectFilled(const ImVec2& p_min, const ImVec2& p_max, ImU32 col, float rounding = 0.0f, ImDrawCornerFlags rounding_corners = ImDrawCornerFlags_All);                     // a: upper-left, b: lower-right (== upper-left + size)
+    IMGUI_API void  AddRectGradient(const ImVec2& p_min, const ImVec2& p_max, ImU32 col);                                                                                                      // a: upper-left, b: lower-right (== upper-left + size)
     IMGUI_API void  AddRectFilledMultiColor(const ImVec2& p_min, const ImVec2& p_max, ImU32 col_upr_left, ImU32 col_upr_right, ImU32 col_bot_right, ImU32 col_bot_left);
     IMGUI_API void  AddQuad(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, ImU32 col, float thickness = 1.0f);
     IMGUI_API void  AddQuadFilled(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, ImU32 col);

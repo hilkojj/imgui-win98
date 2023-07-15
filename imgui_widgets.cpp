@@ -674,8 +674,7 @@ bool ImGui::ButtonEx(const char* label, const ImVec2& size_arg, ImGuiButtonFlags
 
     const bool bInset = held && hovered;
     WinAddRect(bb.Min, bb.Max, col, bInset, ImGui::GetColorU32(ImGui::GetColorU32(bDisabled ? ImGuiCol_TextDisabled : ImGuiCol_Text)), bDisabled);
-    // TODO:
-    //PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
+    PushStyleColor(ImGuiCol_Text, GetColorU32(bInset ? ImGuiCol_ButtonTextActive : ImGuiCol_ButtonText));
     ImVec2 clippedTextMin = bb.Min + style.FramePadding;
     ImVec2 clippedTextMax = bb.Max - style.FramePadding;
     if (bInset)
@@ -684,7 +683,7 @@ bool ImGui::ButtonEx(const char* label, const ImVec2& size_arg, ImGuiButtonFlags
         clippedTextMax += ImVec2(1.0f, 1.0f);
     }
     RenderTextClipped(clippedTextMin, clippedTextMax, label, NULL, &label_size, style.ButtonTextAlign, &bb);
-    //PopStyleColor();
+    PopStyleColor();
 #else
     RenderNavHighlight(bb, id);
     RenderFrame(bb.Min, bb.Max, col, true, style.FrameRounding);
