@@ -2473,7 +2473,7 @@ const char* ImGui::GetStyleColorName(ImGuiCol idx)
     case ImGuiCol_NavWindowingDimBg: return "NavWindowingDimBg";
     case ImGuiCol_ModalWindowDimBg: return "ModalWindowDimBg";
     }
-    IM_ASSERT(0);
+    //IM_ASSERT(0);
     return "Unknown";
 }
 
@@ -5182,85 +5182,46 @@ static inline void ClampWindowRect(ImGuiWindow* window, const ImRect& visibility
 void ImGui::WinAddRect(const ImVec2& min, const ImVec2& max, ImU32 col, bool inset, ImU32 outline, bool bDisabled)
 {
     ImGuiStyle &style = ImGui::GetStyle();
-
-    ImU32 top_left = style.CustomLightenColorFunc
-        ? style.CustomLightenColorFunc(col, bDisabled ? 0.3f : 0.3f) : IM_COL32(255,255,255,255);
-    ImU32 top_left_inner = style.CustomLightenColorFunc
-        ? style.CustomLightenColorFunc(col, bDisabled ? 0.3f : 1.0f) : IM_COL32(255,255,255,255);
-    ImU32 bottom_right = style.CustomDarkenColorFunc
-        ? style.CustomDarkenColorFunc(col, 1.0f) : IM_COL32(0,0,0,255);
-    ImU32 bottom_right_inner = style.CustomDarkenColorFunc
-        ? style.CustomDarkenColorFunc(col, 0.5f) : IM_COL32(0,0,0,255);
-
-    if (inset)
-    {
-        ImU32 tmp = top_left; top_left = bottom_right; bottom_right = tmp;
-        tmp = top_left_inner; top_left_inner = bottom_right_inner; bottom_right_inner = tmp;
-    }
-
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
-    ImVec2 a = min + ImVec2(0.5f, 0.5f);
-    ImVec2 b = max - ImVec2(0.5f, 0.5f);
 
-    draw_list->PathLineTo(ImVec2(a.x, b.y));
-    draw_list->PathLineTo(a);
-    draw_list->PathLineTo(ImVec2(b.x, a.y));
-    draw_list->PathStroke(top_left, false, 1.0f);
+    draw_list->AddRectBordered(min, max, col, false, inset);
 
-    draw_list->PathLineTo(ImVec2(a.x, b.y));
-    draw_list->PathLineTo(b);
-    draw_list->PathLineTo(ImVec2(b.x, a.y));
-    draw_list->PathStroke(bottom_right, false, 1.0f);
-
-    if (!bDisabled)
-    {
-        draw_list->PathLineTo(ImVec2(a.x, b.y) + ImVec2(1, -1));
-        draw_list->PathLineTo(a + ImVec2(1, 1));
-        draw_list->PathLineTo(ImVec2(b.x, a.y) + ImVec2(-1, 1));
-        draw_list->PathStroke(top_left_inner, false, 1.0f);
-
-        if (inset || !outline)
-        {
-            draw_list->PathLineTo(ImVec2(a.x, b.y) + ImVec2(1, -1));
-            draw_list->PathLineTo(b + ImVec2(-1, -1));
-            draw_list->PathLineTo(ImVec2(b.x, a.y) + ImVec2(-1, 1));
-            draw_list->PathStroke(bottom_right_inner, false, 1.0f);
-        }
-    }
+    ImVec2 a(IM_ROUND(min.x), IM_ROUND(min.y));// + ImVec2(0.5f, 0.5f);
+    ImVec2 b(IM_ROUND(max.x), IM_ROUND(max.y));// - ImVec2(0.5f, 0.5f);
 
     if (outline)
     {
         // top:
         draw_list->PathLineTo(ImVec2(a.x, a.y - 1));
-        draw_list->PathLineTo(ImVec2(b.x + 1, a.y - 1));
+        draw_list->PathLineTo(ImVec2(b.x, a.y - 1));
         draw_list->PathStroke(outline, false, 1.0f);
 
         // left:
-        draw_list->PathLineTo(ImVec2(a.x - 1, a.y - 1));
-        draw_list->PathLineTo(ImVec2(a.x - 1, b.y));
+        draw_list->PathLineTo(ImVec2(a.x, a.y));
+        draw_list->PathLineTo(ImVec2(a.x, b.y));
         draw_list->PathStroke(outline, false, 1.0f);
 
         // right:
-        draw_list->PathLineTo(ImVec2(b.x + 1, a.y - 1));
+        draw_list->PathLineTo(ImVec2(b.x + 1, a.y));
         draw_list->PathLineTo(ImVec2(b.x + 1, b.y));
         draw_list->PathStroke(outline, false, 1.0f);
 
         if (!inset && !bDisabled)
         {
-            draw_list->PathLineTo(ImVec2(b.x + 2, a.y));
-            draw_list->PathLineTo(ImVec2(b.x + 2, b.y));
+            draw_list->PathLineTo(ImVec2(b.x, a.y));
+            draw_list->PathLineTo(ImVec2(b.x, b.y));
             draw_list->PathStroke(outline, false, 1.0f);
         }
 
         // bottom:
-        draw_list->PathLineTo(ImVec2(a.x, b.y + 1));
-        draw_list->PathLineTo(ImVec2(b.x + (inset ? 1 : 2), b.y + 1));
+        draw_list->PathLineTo(ImVec2(a.x, b.y));
+        draw_list->PathLineTo(ImVec2(b.x, b.y));
         draw_list->PathStroke(outline, false, 1.0f);
 
         if (!inset && !bDisabled)
         {
-            draw_list->PathLineTo(ImVec2(a.x + 1, b.y + 2));
-            draw_list->PathLineTo(ImVec2(b.x + 1, b.y + 2));
+            draw_list->PathLineTo(ImVec2(a.x, b.y - 1.0f));
+            draw_list->PathLineTo(ImVec2(b.x, b.y - 1.0f));
             draw_list->PathStroke(outline, false, 1.0f);
         }
     }
@@ -5274,8 +5235,7 @@ static void ImGui::RenderWindowOuterBorders(ImGuiWindow* window)
     float border_size = window->WindowBorderSize;
 
 #ifdef WIN98_STYLE // window borders
-    if (border_size > 0.0f && !(window->Flags & ImGuiWindowFlags_NoBackground))
-        WinAddRect(window->Pos, window->Pos + window->Size, GetColorU32(ImGuiCol_WindowBg), false);
+
 #else
     if (border_size > 0.0f && !(window->Flags & ImGuiWindowFlags_NoBackground))
         window->DrawList->AddRect(window->Pos, window->Pos + window->Size, GetColorU32(ImGuiCol_Border), rounding, ImDrawCornerFlags_All, border_size);
@@ -5312,13 +5272,20 @@ void ImGui::RenderWindowDecorations(ImGuiWindow* window, const ImRect& title_bar
     // As we highlight the title bar when want_focus is set, multiple reappearing windows will have have their title bar highlighted on their reappearing frame.
     const float window_rounding = window->WindowRounding;
     const float window_border_size = window->WindowBorderSize;
+    const bool bShowShadow = (window->ChildId == 0 && title_bar_is_highlight && !(flags & ImGuiWindowFlags_MenuBar)) || (flags & ImGuiWindowFlags_Tooltip);
+    ImU32 bg_col = GetColorU32(GetWindowBgColorIdxFromFlags(flags));
+
     if (window->Collapsed)
     {
         // Title bar only
+        if (bShowShadow)
+        {
+            window->DrawList->AddRectFaded(title_bar_rect.Min + ImVec2(0.0f, 4.0f), title_bar_rect.Max + ImVec2(0.0f, window->WindowBorderSize + 4.0f), GetColorU32(ImGuiCol_WindowShadow));
+        }
+
         float backup_border_size = style.FrameBorderSize;
         g.Style.FrameBorderSize = window->WindowBorderSize;
-        ImU32 title_bar_col = GetColorU32((title_bar_is_highlight && !g.NavDisableHighlight) ? ImGuiCol_TitleBgActive : ImGuiCol_TitleBgCollapsed);
-        RenderFrame(title_bar_rect.Min, title_bar_rect.Max, title_bar_col, true, window_rounding, false);
+        window->DrawList->AddRectBordered(title_bar_rect.Min, title_bar_rect.Max + ImVec2(0.0f, window->WindowBorderSize), bg_col, true);
         g.Style.FrameBorderSize = backup_border_size;
     }
     else
@@ -5326,24 +5293,11 @@ void ImGui::RenderWindowDecorations(ImGuiWindow* window, const ImRect& title_bar
         // Window background
         if (!(flags & ImGuiWindowFlags_NoBackground))
         {
-            ImU32 bg_col = GetColorU32(GetWindowBgColorIdxFromFlags(flags));
-            bool override_alpha = false;
-            float alpha = 1.0f;
-            if (g.NextWindowData.Flags & ImGuiNextWindowDataFlags_HasBgAlpha)
+            if (bShowShadow)
             {
-                alpha = g.NextWindowData.BgAlphaVal;
-                override_alpha = true;
+                window->DrawList->AddRectFaded(window->Pos + ImVec2(0.0f, 4.0f), window->Pos + window->Size + ImVec2(0.0f, 4.0f), GetColorU32(ImGuiCol_WindowShadow));
             }
-            if (override_alpha)
-                bg_col = (bg_col & ~IM_COL32_A_MASK) | (IM_F32_TO_INT8_SAT(alpha) << IM_COL32_A_SHIFT);
-            window->DrawList->AddRectFilled(window->Pos + ImVec2(0, window->TitleBarHeight()), window->Pos + window->Size, bg_col, window_rounding, (flags & ImGuiWindowFlags_NoTitleBar) ? ImDrawCornerFlags_All : ImDrawCornerFlags_Bot);
-        }
-
-        // Title bar
-        if (!(flags & ImGuiWindowFlags_NoTitleBar))
-        {
-            ImU32 title_bar_col = GetColorU32(title_bar_is_highlight ? ImGuiCol_TitleBgActive : ImGuiCol_TitleBg);
-            window->DrawList->AddRectGradient(title_bar_rect.Min, title_bar_rect.Max, title_bar_col);
+            window->DrawList->AddRectBordered(window->Pos, window->Pos + window->Size, bg_col, !(window->Flags & ImGuiWindowFlags_NoTitleBar));
         }
 
         // Menu bar
@@ -5351,9 +5305,10 @@ void ImGui::RenderWindowDecorations(ImGuiWindow* window, const ImRect& title_bar
         {
             ImRect menu_bar_rect = window->MenuBarRect();
             menu_bar_rect.ClipWith(window->Rect());  // Soft clipping, in particular child window don't have minimum size covering the menu bar so this is useful for them.
-            window->DrawList->AddRectFilled(menu_bar_rect.Min + ImVec2(window_border_size, 0), menu_bar_rect.Max - ImVec2(window_border_size, 0), GetColorU32(ImGuiCol_MenuBarBg), (flags & ImGuiWindowFlags_NoTitleBar) ? window_rounding : 0.0f, ImDrawCornerFlags_Top);
-            if (style.FrameBorderSize > 0.0f && menu_bar_rect.Max.y < window->Pos.y + window->Size.y)
-                window->DrawList->AddLine(menu_bar_rect.GetBL(), menu_bar_rect.GetBR(), GetColorU32(ImGuiCol_Border), style.FrameBorderSize);
+            if (!(flags & ImGuiWindowFlags_NoTitleBar))
+            {
+                window->DrawList->AddRectBordered(menu_bar_rect.Min + ImVec2(window_border_size, 0), menu_bar_rect.Max - ImVec2(window_border_size, 0), GetColorU32(ImGuiCol_MenuBarBg), false);
+            }
         }
 
         // Scrollbars
@@ -5398,68 +5353,38 @@ void ImGui::RenderWindowTitleBarContents(ImGuiWindow* window, const ImRect& titl
     window->DC.NavLayerCurrentMask = (1 << ImGuiNavLayer_Menu);
 
     // Layout buttons
-    // FIXME: Would be nice to generalize the subtleties expressed here into reusable code.
-    float pad_l = style.FramePadding.x;
-    float pad_r = style.FramePadding.x;
-    float button_sz = g.FontSize;
-#ifdef WIN98_STYLE // draw title bar
-    button_sz = 16.0f;
-    // pad_l = 0.0f;
-    pad_r = 0.0f;
-#endif
+    float button_sz = 24.0f;
+    float pad_l = 2.0f;
+    float pad_r = 2.0f;
+    float pad_t = 2.0f;
+
     ImVec2 close_button_pos;
     ImVec2 collapse_button_pos;
     if (has_close_button)
     {
         pad_r += button_sz;
-        close_button_pos = ImVec2(title_bar_rect.Max.x - pad_r - style.FramePadding.x, title_bar_rect.Min.y);
+        close_button_pos = ImVec2(title_bar_rect.Max.x - pad_r, title_bar_rect.Min.y + pad_t);
     }
     if (has_collapse_button && style.WindowMenuButtonPosition == ImGuiDir_Right)
     {
         pad_r += button_sz;
-        collapse_button_pos = ImVec2(title_bar_rect.Max.x - pad_r - style.FramePadding.x, title_bar_rect.Min.y);
+        collapse_button_pos = ImVec2(title_bar_rect.Max.x - pad_r, title_bar_rect.Min.y + pad_t);
     }
     if (has_collapse_button && style.WindowMenuButtonPosition == ImGuiDir_Left)
     {
-        collapse_button_pos = ImVec2(title_bar_rect.Min.x + pad_l - style.FramePadding.x, title_bar_rect.Min.y);
+        collapse_button_pos = ImVec2(title_bar_rect.Min.x + pad_l, title_bar_rect.Min.y + pad_t);
         pad_l += button_sz;
     }
 
 #ifdef WIN98_STYLE // windows style title bar
 
-    close_button_pos += ImVec2(0.0f, 2.0f);
-    collapse_button_pos += ImVec2(2.0f, 2.0f);
-
-    ImU32 col_left = IM_COL32(128,128,128,255);
-    ImU32 col_right = IM_COL32(181,181,181,255);
-
     bool focused = IsWindowFocused(ImGuiFocusedFlags_ChildWindows);
-    if (focused) {
 
-        // Windows98 colors are (0,0,128), (16,132,208)
-        // This code generates the secondary color from the primary while
-        // keeping the original windows colors
-        // TODO:
-        /*
-        col_left = GetColorU32(ImGuiCol_TitleBgActive);
+    // Title bar
+    ImU32 title_bar_col = GetColorU32(focused ? ImGuiCol_TitleBgActive : ImGuiCol_TitleBg);
+    window->DrawList->AddRectBordered(title_bar_rect.Min + ImVec2(pad_l, pad_t), title_bar_rect.Max + ImVec2(-pad_r, 0.0f), title_bar_col, false);
+    window->DrawList->AddRectGradient(title_bar_rect.Min + ImVec2(pad_l + 2.0f, pad_t + 2.0f), title_bar_rect.Max + ImVec2(-pad_r - 2.0f, -2.0f), title_bar_col);
 
-
-        ImVec4 secondary = GetStyleColorVec4(ImGuiCol_TitleBgActive);
-        ImVec4 secondary_hsv;
-        ColorConvertRGBtoHSV(secondary.x, secondary.y, secondary.z, secondary_hsv.x, secondary_hsv.y, secondary_hsv.z);
-        secondary_hsv.x -= 0.1f;
-        if (secondary_hsv.x < 0.0f) secondary_hsv.x += 1.0f;
-        secondary_hsv.y *= 0.92f;
-        secondary_hsv.z *= 1.625f;
-        ColorConvertHSVtoRGB(secondary_hsv.x, secondary_hsv.y, secondary_hsv.z, secondary.x, secondary.y, secondary.z);
-
-        col_right = ColorConvertFloat4ToU32(secondary);
-         */
-
-    }
-
-
-    //window->DrawList->AddRectFilledMultiColor(title_bar_rect.Min, title_bar_rect.Max, col_left, col_right, col_right, col_left);
 #endif
 
     // Collapse button (submitting first so it gets priority when choosing a navigation init fallback)
@@ -5736,7 +5661,11 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
         else
             window->WindowBorderSize = ((flags & (ImGuiWindowFlags_Popup | ImGuiWindowFlags_Tooltip)) && !(flags & ImGuiWindowFlags_Modal)) ? style.PopupBorderSize : style.WindowBorderSize;
         window->WindowPadding = style.WindowPadding;
-        if ((flags & ImGuiWindowFlags_ChildWindow) && !(flags & (ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_Popup)) && window->WindowBorderSize == 0.0f)
+        if (!(flags & ImGuiWindowFlags_NoTitleBar))
+        {
+            window->WindowPadding = ImVec2(window->WindowBorderSize, window->WindowBorderSize * 0.5f);
+        }
+        else if ((flags & ImGuiWindowFlags_ChildWindow) && !(flags & (ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_Popup)) && window->WindowBorderSize == 0.0f)
             window->WindowPadding = ImVec2(0.0f, (flags & ImGuiWindowFlags_MenuBar) ? style.WindowPadding.y : 0.0f);
 
         // Collapse window by double-clicking on title bar
@@ -5803,7 +5732,11 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
         window->Size = window->Collapsed && !(flags & ImGuiWindowFlags_ChildWindow) ? window->TitleBarRect().GetSize() : window->SizeFull;
 
         // Decoration size
-        const float decoration_up_height = window->TitleBarHeight() + window->MenuBarHeight();
+        float decoration_up_height = window->TitleBarHeight() + window->MenuBarHeight();
+        if (!(flags & ImGuiWindowFlags_NoTitleBar))
+        {
+            decoration_up_height -= window->WindowBorderSize * 0.5f;
+        }
 
         // POSITION
 
@@ -5931,7 +5864,7 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
         // - Begin() initial clip rect
         float top_border_size = (((flags & ImGuiWindowFlags_MenuBar) || !(flags & ImGuiWindowFlags_NoTitleBar)) ? style.FrameBorderSize : window->WindowBorderSize);
         window->InnerClipRect.Min.x = ImFloor(0.5f + window->InnerRect.Min.x + ImMax(ImFloor(window->WindowPadding.x * 0.5f), window->WindowBorderSize));
-        window->InnerClipRect.Min.y = ImFloor(0.5f + window->InnerRect.Min.y + top_border_size);
+        window->InnerClipRect.Min.y = ImFloor(1.0f + window->InnerRect.Min.y + top_border_size);
         window->InnerClipRect.Max.x = ImFloor(0.5f + window->InnerRect.Max.x - ImMax(ImFloor(window->WindowPadding.x * 0.5f), window->WindowBorderSize));
         window->InnerClipRect.Max.y = ImFloor(0.5f + window->InnerRect.Max.y - window->WindowBorderSize);
         window->InnerClipRect.ClipWithFull(host_rect);

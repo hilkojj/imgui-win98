@@ -670,7 +670,6 @@ bool ImGui::ButtonEx(const char* label, const ImVec2& size_arg, ImGuiButtonFlags
     // Render
     const ImU32 col = GetColorU32(bDisabled ? ImGuiCol_ButtonDisabled : ((held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button));
 #ifdef WIN98_STYLE
-    window->DrawList->AddRectFilled(bb.Min, bb.Max, col, 0.0f);
 
     const bool bInset = held && hovered;
     WinAddRect(bb.Min, bb.Max, col, bInset, ImGui::GetColorU32(ImGui::GetColorU32(bDisabled ? ImGuiCol_TextDisabled : ImGuiCol_Text)), bDisabled);
@@ -781,7 +780,7 @@ bool ImGui::CloseButton(ImGuiID id, const ImVec2& pos)//, float size)
     ImGuiWindow* window = g.CurrentWindow;
 
 #ifdef WIN98_STYLE // close button size
-    const ImRect bb(pos, pos + ImVec2(18.0f, 18.0f));
+    const ImRect bb(pos, pos + ImVec2(24.0f, 24.0f));
 #else
     // We intentionally allow interaction when clipped so that a mechanical Alt,Right,Validate sequence close a window.
     // (this isn't the regular behavior of buttons, but it doesn't affect the user much because navigation tends to keep items visible).
@@ -800,8 +799,7 @@ bool ImGui::CloseButton(ImGuiID id, const ImVec2& pos)//, float size)
 
 #ifdef WIN98_STYLE // close button
     const ImU32 fill_col = GetColorU32(ImGuiCol_WindowBg);
-    window->DrawList->AddRectFilled(bb.Min, bb.Max, fill_col, 0.0f);
-    WinAddRect(bb.Min, bb.Max, fill_col, (held && hovered), ImGui::GetColorU32(ImGuiCol_Text));
+    WinAddRect(bb.Min, bb.Max, fill_col, (held && hovered));
 #else
     if (hovered)
         window->DrawList->AddCircleFilled(center, ImMax(2.0f, g.FontSize * 0.5f + 1.0f), col, 12);
@@ -828,7 +826,7 @@ bool ImGui::CollapseButton(ImGuiID id, const ImVec2& pos)
     ImGuiWindow* window = g.CurrentWindow;
 
 #ifdef WIN98_STYLE // collapse button size
-    ImRect bb(pos, pos + ImVec2(18.0f, 18.0f));
+    ImRect bb(pos, pos + ImVec2(24.0f, 24.0f));
 #else
     ImRect bb(pos, pos + ImVec2(g.FontSize, g.FontSize) + g.Style.FramePadding * 2.0f);
 #endif
@@ -837,17 +835,15 @@ bool ImGui::CollapseButton(ImGuiID id, const ImVec2& pos)
     bool pressed = ButtonBehavior(bb, id, &hovered, &held, ImGuiButtonFlags_None);
 
     // Render
-    ImU32 bg_col = GetColorU32((held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
+    ImU32 bg_col = GetColorU32(ImGuiCol_WindowBg);
     ImU32 text_col = GetColorU32(ImGuiCol_Text);
     ImVec2 center = bb.GetCenter();
 
 #ifdef WIN98_STYLE // collapse button
-    const ImU32 fill_col = GetColorU32(ImGuiCol_WindowBg);
-    window->DrawList->AddRectFilled(bb.Min, bb.Max, fill_col, 0.0f);
-    WinAddRect(bb.Min, bb.Max, fill_col, hovered && held, ImGui::GetColorU32(ImGuiCol_Text));
+    WinAddRect(bb.Min, bb.Max, bg_col, hovered && held);
 
     // collapse icon
-    RenderArrow(window->DrawList, bb.Min + ImVec2(1.0f, 2.0f), text_col, window->Collapsed ? ImGuiDir_Right : ImGuiDir_Down, 0.9f);
+    RenderArrow(window->DrawList, bb.Min + ImVec2(3.0f, 4.0f), text_col, window->Collapsed ? ImGuiDir_Right : ImGuiDir_Down, 0.9f);
 #else
     if (hovered || held)
         window->DrawList->AddCircleFilled(center/*+ ImVec2(0.0f, -0.5f)*/, g.FontSize * 0.5f + 1.0f, bg_col, 12);
@@ -875,9 +871,19 @@ ImRect ImGui::GetWindowScrollbarRect(ImGuiWindow* window, ImGuiAxis axis)
     const float scrollbar_size = window->ScrollbarSizes[axis ^ 1]; // (ScrollbarSizes.x = width of Y scrollbar; ScrollbarSizes.y = height of X scrollbar)
     IM_ASSERT(scrollbar_size > 0.0f);
     if (axis == ImGuiAxis_X)
-        return ImRect(inner_rect.Min.x, ImMax(outer_rect.Min.y, outer_rect.Max.y - border_size - scrollbar_size), inner_rect.Max.x, outer_rect.Max.y);
+        return ImRect(
+            inner_rect.Min.x + border_size,
+            ImMax(outer_rect.Min.y, outer_rect.Max.y - border_size - scrollbar_size),
+            inner_rect.Max.x - border_size,
+            outer_rect.Max.y - border_size
+        );
     else
-        return ImRect(ImMax(outer_rect.Min.x, outer_rect.Max.x - border_size - scrollbar_size), inner_rect.Min.y, outer_rect.Max.x, inner_rect.Max.y);
+        return ImRect(
+            ImMax(outer_rect.Min.x, outer_rect.Max.x - border_size - scrollbar_size),
+            inner_rect.Min.y + (!(window->Flags & ImGuiWindowFlags_NoTitleBar) ? border_size * 0.5f : border_size),
+            outer_rect.Max.x - border_size,
+            inner_rect.Max.y - border_size
+        );
 }
 
 void ImGui::Scrollbar(ImGuiAxis axis)
@@ -1012,14 +1018,18 @@ bool ImGui::ScrollbarEx(const ImRect& bb_frame, ImGuiID id, ImGuiAxis axis, floa
     } else {
         grab_rect = ImRect(bb.Min.x, ImLerp(bb.Min.y, bb.Max.y, grab_v_norm), bb.Max.x, ImLerp(bb.Min.y, bb.Max.y, grab_v_norm) + grab_h_pixels);
     }
-    WinAddRect(grab_rect.Min, grab_rect.Max, GetColorU32(ImGuiCol_WindowBg), false);
+    window->DrawList->AddRectBordered(bb.Min, bb.Max, GetColorU32(ImGuiCol_ScrollbarBg), true);
+    window->DrawList->AddRectBordered(grab_rect.Min + ImVec2(4.0f, 4.0f), grab_rect.Max - ImVec2(4.0f, 4.0f), GetColorU32(held ? ImGuiCol_ScrollbarGrabActive : (hovered ? ImGuiCol_ScrollbarGrabHovered : ImGuiCol_ScrollbarGrab)), false);
     {
         const ImGuiID up_id = window->GetID("##scrollup");
         ImRect button_bounds(bb_frame.Min, bb_frame.Min + button_size_rect);
         bool held_up = false;
         bool hovered_up = false;
-        bool pressed_up = ButtonBehavior(button_bounds, up_id, &hovered_up, &held_up, 0);
-        WinAddRect(button_bounds.Min, button_bounds.Max, GetColorU32(ImGuiCol_WindowBg), (held_up && hovered_up));
+        if (ButtonBehavior(button_bounds, up_id, &hovered_up, &held_up, ImGuiButtonFlags_Repeat))
+        {
+            *p_scroll_v = ImMax(0.0f, *p_scroll_v - 4.0f);
+        }
+        WinAddRect(button_bounds.Min, button_bounds.Max, GetColorU32(ImGuiCol_ScrollbarGrab), (held_up && hovered_up));
     }
     {
         const ImGuiID down_id = window->GetID("##scrolldown");
@@ -1027,8 +1037,11 @@ bool ImGui::ScrollbarEx(const ImRect& bb_frame, ImGuiID id, ImGuiAxis axis, floa
         ImRect button_bounds(pos, pos + button_size_rect);
         bool held_down = false;
         bool hovered_down = false;
-        bool pressed_down = ButtonBehavior(button_bounds, down_id, &hovered_down, &held_down, 0);
-        WinAddRect(button_bounds.Min, button_bounds.Max, GetColorU32(ImGuiCol_WindowBg), (held_down && hovered_down));
+        if (ButtonBehavior(button_bounds, down_id, &hovered_down, &held_down, ImGuiButtonFlags_Repeat))
+        {
+            *p_scroll_v = ImMin(scroll_max, *p_scroll_v + 4.0f);
+        }
+        WinAddRect(button_bounds.Min, button_bounds.Max, GetColorU32(ImGuiCol_ScrollbarGrab), (held_down && hovered_down));
     }
 #else
     const ImU32 bg_col = GetColorU32(ImGuiCol_ScrollbarBg);
@@ -1095,7 +1108,6 @@ bool ImGui::ImageButtonEx(ImGuiID id, ImTextureID texture_id, const ImVec2& size
     ImVec2 imageMax = bb.Max - padding;
 
 #ifdef WIN98_STYLE
-    window->DrawList->AddRectFilled(bb.Min, bb.Max, col);
     const bool bInset = (held && hovered) || (flags & ImGuiButtonFlags_Win98Inset);
     WinAddRect(bb.Min, bb.Max, col, bInset, ImGui::GetColorU32(bDisabled ? ImGuiCol_TextDisabled : ImGuiCol_Text), bDisabled);
     if (bInset)
@@ -6437,10 +6449,12 @@ bool ImGui::BeginMenu(const char* label, bool enabled)
         // Selectable extend their highlight by half ItemSpacing in each direction.
         // For ChildMenu, the popup position will be overwritten by the call to FindBestWindowPosForPopup() in Begin()
         popup_pos = ImVec2(pos.x - 1.0f - IM_FLOOR(style.ItemSpacing.x * 0.5f), pos.y - style.FramePadding.y + window->MenuBarHeight());
-        window->DC.CursorPos.x += IM_FLOOR(style.ItemSpacing.x * 0.5f);
+        window->DC.CursorPos.x += IM_FLOOR(style.ItemSpacing.x * 0.5f) + 2.0f;
         PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(style.ItemSpacing.x * 2.0f, style.ItemSpacing.y));
+        PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10.0f, 0.0f));
         float w = label_size.x;
         pressed = Selectable(label, menu_is_open, ImGuiSelectableFlags_NoHoldingActiveID | ImGuiSelectableFlags_SelectOnClick | ImGuiSelectableFlags_DontClosePopups | (!enabled ? ImGuiSelectableFlags_Disabled : 0), ImVec2(w, 0.0f));
+        PopStyleVar();
         PopStyleVar();
         window->DC.CursorPos.x += IM_FLOOR(style.ItemSpacing.x * (-1.0f + 0.5f)); // -1 spacing to compensate the spacing added when Selectable() did a SameLine(). It would also work to call SameLine() ourselves after the PopStyleVar().
     }

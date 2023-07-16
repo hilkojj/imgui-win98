@@ -1163,6 +1163,20 @@ void ImDrawList::AddRectGradient(const ImVec2& p_min, const ImVec2& p_max, ImU32
     PrimRectUV(p_min, p_max, uv, uv, col);
 }
 
+void ImDrawList::AddRectFaded(const ImVec2& p_min, const ImVec2& p_max, ImU32 col)
+{
+    PrimReserve(6, 4);
+    ImVec2 uv(_Data->TexUvWhitePixel.x, _Data->TexUvWhitePixel.y + 1.0f);   // + 1.0f correspondents with the faded effect :D
+    PrimRectUV(p_min, p_max, uv, uv, col);
+}
+
+void ImDrawList::AddRectBordered(const ImVec2& p_min, const ImVec2& p_max, ImU32 col, bool bInset, bool bPressed)
+{
+    PrimReserve(6, 4);
+    ImVec2 uv(_Data->TexUvWhitePixel.x, _Data->TexUvWhitePixel.y + 3.0f + (bPressed ? 2.0f : float(bInset)));   // + 3.0f correspondents with the bordered effect :D
+    PrimRectUV(p_min, p_max, uv, uv, col);
+}
+
 // p_min = upper-left, p_max = lower-right
 void ImDrawList::AddRectFilledMultiColor(const ImVec2& p_min, const ImVec2& p_max, ImU32 col_upr_left, ImU32 col_upr_right, ImU32 col_bot_right, ImU32 col_bot_left)
 {
