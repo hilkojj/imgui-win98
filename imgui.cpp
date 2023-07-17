@@ -943,6 +943,21 @@ ImGuiStyle::ImGuiStyle()
     CustomDarkenColorFunc = nullptr;
     CustomLightenColorFunc = nullptr;
 
+    CloseButtonUV0 = ImVec2(-1.0f, -1.0f);
+    CloseButtonUV1 = ImVec2(-1.0f, -1.0f);
+
+    CollapseButtonUV0 = ImVec2(-1.0f, -1.0f);
+    CollapseButtonUV1 = ImVec2(-1.0f, -1.0f);
+
+    UncollapseButtonUV0 = ImVec2(-1.0f, -1.0f);
+    UncollapseButtonUV1 = ImVec2(-1.0f, -1.0f);
+
+    ScrollUpButtonUV0 = ImVec2(-1.0f, -1.0f);
+    ScrollUpButtonUV1 = ImVec2(-1.0f, -1.0f);
+
+    ScrollDownButtonUV0 = ImVec2(-1.0f, -1.0f);
+    ScrollDownButtonUV1 = ImVec2(-1.0f, -1.0f);
+
     // Default theme
     ImGui::StyleColorsDark(this);
 }

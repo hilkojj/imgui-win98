@@ -798,7 +798,7 @@ bool ImGui::CloseButton(ImGuiID id, const ImVec2& pos)//, float size)
     ImVec2 center = bb.GetCenter();
 
 #ifdef WIN98_STYLE // close button
-    const ImU32 fill_col = GetColorU32(ImGuiCol_WindowBg);
+    const ImU32 fill_col = GetColorU32(ImGuiCol_TitleButton);
     WinAddRect(bb.Min, bb.Max, fill_col, (held && hovered));
 #else
     if (hovered)
@@ -810,8 +810,19 @@ bool ImGui::CloseButton(ImGuiID id, const ImVec2& pos)//, float size)
     center -= ImVec2(0.5f, 0.5f);
 #ifdef WIN98_STYLE // close button icon
     //RenderText(bb.Min + ImVec2(2.0f, 2.0f), "\xC3\x97");
-    window->DrawList->AddLine(center + ImVec2(+cross_extent, +cross_extent), center + ImVec2(-cross_extent, -cross_extent), cross_col, 1.0f);
-    window->DrawList->AddLine(center + ImVec2(+cross_extent, -cross_extent), center + ImVec2(-cross_extent, +cross_extent), cross_col, 1.0f);
+
+    const ImVec2 &uv1 = g.Style.CloseButtonUV1;
+    const ImVec2 &uv0 = g.Style.CloseButtonUV0;
+
+    if (uv0.x >= 0.0f)
+    {
+        window->DrawList->AddImage(g.IO.Fonts->TexID, bb.Min + ImVec2(2.0f, 2.0f), bb.Max - ImVec2(2.0f, 2.0f), uv0, uv1, fill_col);
+    }
+    else
+    {
+        window->DrawList->AddLine(center + ImVec2(+cross_extent, +cross_extent), center + ImVec2(-cross_extent, -cross_extent), cross_col, 1.0f);
+        window->DrawList->AddLine(center + ImVec2(+cross_extent, -cross_extent), center + ImVec2(-cross_extent, +cross_extent), cross_col, 1.0f);
+    }
 #else
     window->DrawList->AddLine(center + ImVec2(+cross_extent, +cross_extent), center + ImVec2(-cross_extent, -cross_extent), cross_col, 1.0f);
     window->DrawList->AddLine(center + ImVec2(+cross_extent, -cross_extent), center + ImVec2(-cross_extent, +cross_extent), cross_col, 1.0f);
@@ -835,7 +846,7 @@ bool ImGui::CollapseButton(ImGuiID id, const ImVec2& pos)
     bool pressed = ButtonBehavior(bb, id, &hovered, &held, ImGuiButtonFlags_None);
 
     // Render
-    ImU32 bg_col = GetColorU32(ImGuiCol_WindowBg);
+    ImU32 bg_col = GetColorU32(ImGuiCol_TitleButton);   // TODO: not always in title bar though..
     ImU32 text_col = GetColorU32(ImGuiCol_Text);
     ImVec2 center = bb.GetCenter();
 
@@ -843,7 +854,19 @@ bool ImGui::CollapseButton(ImGuiID id, const ImVec2& pos)
     WinAddRect(bb.Min, bb.Max, bg_col, hovered && held);
 
     // collapse icon
-    RenderArrow(window->DrawList, bb.Min + ImVec2(3.0f, 4.0f), text_col, window->Collapsed ? ImGuiDir_Right : ImGuiDir_Down, 0.9f);
+
+    const ImVec2 &uv0 = window->Collapsed ? g.Style.UncollapseButtonUV0 : g.Style.CollapseButtonUV0;
+    const ImVec2 &uv1 = window->Collapsed ? g.Style.UncollapseButtonUV1 : g.Style.CollapseButtonUV1;
+
+    if (uv0.x >= 0.0f)
+    {
+        window->DrawList->AddImage(g.IO.Fonts->TexID, bb.Min + ImVec2(2.0f, 2.0f), bb.Max - ImVec2(2.0f, 2.0f), uv0, uv1, bg_col);
+    }
+    else
+    {
+        RenderArrow(window->DrawList, bb.Min + ImVec2(3.0f, 4.0f), text_col, window->Collapsed ? ImGuiDir_Right : ImGuiDir_Down, 0.9f);
+    }
+
 #else
     if (hovered || held)
         window->DrawList->AddCircleFilled(center/*+ ImVec2(0.0f, -0.5f)*/, g.FontSize * 0.5f + 1.0f, bg_col, 12);
@@ -951,7 +974,10 @@ bool ImGui::ScrollbarEx(const ImRect& bb_frame, ImGuiID id, ImGuiAxis axis, floa
     ImVec2 main_axis((axis == ImGuiAxis_X) ? 1.0f : 0.0f, (axis == ImGuiAxis_X) ? 0.0f : 1.0f);
     ImVec2 main_axis_button_size = main_axis * button_size;
 
-    bb.Expand(main_axis * -button_size);
+    if (axis == ImGuiAxis_Y)
+    {
+        bb.Expand(main_axis * -button_size);
+    }
 #else
     ImRect bb = bb_frame;
     bb.Expand(ImVec2(-ImClamp(IM_FLOOR((bb_frame_width - 2.0f) * 0.5f), 0.0f, 3.0f), -ImClamp(IM_FLOOR((bb_frame_height - 2.0f) * 0.5f), 0.0f, 3.0f)));
@@ -1020,6 +1046,9 @@ bool ImGui::ScrollbarEx(const ImRect& bb_frame, ImGuiID id, ImGuiAxis axis, floa
     }
     window->DrawList->AddRectBordered(bb.Min, bb.Max, GetColorU32(ImGuiCol_ScrollbarBg), true);
     window->DrawList->AddRectBordered(grab_rect.Min + ImVec2(4.0f, 4.0f), grab_rect.Max - ImVec2(4.0f, 4.0f), GetColorU32(held ? ImGuiCol_ScrollbarGrabActive : (hovered ? ImGuiCol_ScrollbarGrabHovered : ImGuiCol_ScrollbarGrab)), false);
+
+    const ImU32 scrollbar_grab_color = GetColorU32(ImGuiCol_ScrollbarGrab);
+    if (axis == ImGuiAxis_Y)
     {
         const ImGuiID up_id = window->GetID("##scrollup");
         ImRect button_bounds(bb_frame.Min, bb_frame.Min + button_size_rect);
@@ -1029,8 +1058,16 @@ bool ImGui::ScrollbarEx(const ImRect& bb_frame, ImGuiID id, ImGuiAxis axis, floa
         {
             *p_scroll_v = ImMax(0.0f, *p_scroll_v - 4.0f);
         }
-        WinAddRect(button_bounds.Min, button_bounds.Max, GetColorU32(ImGuiCol_ScrollbarGrab), (held_up && hovered_up));
+        WinAddRect(button_bounds.Min, button_bounds.Max, scrollbar_grab_color, (held_up && hovered_up));
+        const ImVec2 &uv1 = g.Style.ScrollDownButtonUV0;    // TODO: somewhere I swapped Up and Down
+        const ImVec2 &uv0 = g.Style.ScrollDownButtonUV1;
+
+        if (uv0.x >= 0.0f)
+        {
+            window->DrawList->AddImage(g.IO.Fonts->TexID, button_bounds.Min + ImVec2(2.0f, 2.0f), button_bounds.Max - ImVec2(2.0f, 2.0f), uv0, uv1, scrollbar_grab_color);
+        }
     }
+    if (axis == ImGuiAxis_Y)
     {
         const ImGuiID down_id = window->GetID("##scrolldown");
         ImVec2 pos = bb_frame.Min + main_axis * (((axis == ImGuiAxis_X) ? bb_frame.GetWidth() : bb_frame.GetHeight()) - button_size);
@@ -1041,7 +1078,14 @@ bool ImGui::ScrollbarEx(const ImRect& bb_frame, ImGuiID id, ImGuiAxis axis, floa
         {
             *p_scroll_v = ImMin(scroll_max, *p_scroll_v + 4.0f);
         }
-        WinAddRect(button_bounds.Min, button_bounds.Max, GetColorU32(ImGuiCol_ScrollbarGrab), (held_down && hovered_down));
+        WinAddRect(button_bounds.Min, button_bounds.Max, scrollbar_grab_color, (held_down && hovered_down));
+        const ImVec2 &uv1 = g.Style.ScrollUpButtonUV0;
+        const ImVec2 &uv0 = g.Style.ScrollUpButtonUV1;
+
+        if (uv0.x >= 0.0f)
+        {
+            window->DrawList->AddImage(g.IO.Fonts->TexID, button_bounds.Min + ImVec2(2.0f, 2.0f), button_bounds.Max - ImVec2(2.0f, 2.0f), uv0, uv1, scrollbar_grab_color);
+        }
     }
 #else
     const ImU32 bg_col = GetColorU32(ImGuiCol_ScrollbarBg);

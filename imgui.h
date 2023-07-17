@@ -1146,6 +1146,7 @@ enum ImGuiCol_
     ImGuiCol_TitleBg,
     ImGuiCol_TitleBgActive,
     ImGuiCol_TitleBgCollapsed,
+    ImGuiCol_TitleButton,
     ImGuiCol_TitleText,
     ImGuiCol_TitleTextActive,
     ImGuiCol_MenuBarBg,
@@ -1461,6 +1462,21 @@ struct ImGuiStyle
 
     ImU32 (*CustomDarkenColorFunc)(ImU32 color, float darken);
     ImU32 (*CustomLightenColorFunc)(ImU32 color, float lighten);
+
+    ImVec2 CloseButtonUV0;
+    ImVec2 CloseButtonUV1;
+
+    ImVec2 CollapseButtonUV0;
+    ImVec2 CollapseButtonUV1;
+
+    ImVec2 UncollapseButtonUV0;
+    ImVec2 UncollapseButtonUV1;
+
+    ImVec2 ScrollUpButtonUV0;
+    ImVec2 ScrollUpButtonUV1;
+
+    ImVec2 ScrollDownButtonUV0;
+    ImVec2 ScrollDownButtonUV1;
 
     IMGUI_API ImGuiStyle();
     IMGUI_API void ScaleAllSizes(float scale_factor);
