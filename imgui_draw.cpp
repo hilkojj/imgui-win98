@@ -1177,6 +1177,13 @@ void ImDrawList::AddRectBordered(const ImVec2& p_min, const ImVec2& p_max, ImU32
     PrimRectUV(p_min, p_max, uv, uv, col);
 }
 
+void ImDrawList::AddRectTransparent(const ImVec2 &p_min, const ImVec2 &p_max, ImU32 col)
+{
+    PrimReserve(6, 4);
+    ImVec2 uv(_Data->TexUvWhitePixel.x, _Data->TexUvWhitePixel.y + 6.0f);   // + 6.0f correspondents with the faded effect :D
+    PrimRectUV(p_min, p_max, uv, uv, col);
+}
+
 // p_min = upper-left, p_max = lower-right
 void ImDrawList::AddRectFilledMultiColor(const ImVec2& p_min, const ImVec2& p_max, ImU32 col_upr_left, ImU32 col_upr_right, ImU32 col_bot_right, ImU32 col_bot_left)
 {
@@ -1460,6 +1467,52 @@ void ImDrawList::AddImageRounded(ImTextureID user_texture_id, const ImVec2& p_mi
         PopTextureID();
 }
 
+void ImDrawList::AddNineSlice(ImTextureID user_texture_id, const ImRect& bb, const ImGuiStyle::NineSlice &slice, ImU32 col)
+{
+    // TOP:
+    AddImage(user_texture_id,
+        bb.GetTL(),
+        bb.GetTL() + slice.TopLeftOffset,
+        slice.TopLeftUV0, slice.TopLeftUV1, col);
+    const float rightColWidth = slice.Size.x - slice.TopLeftOffset.x - slice.InnerSize.x;
+    AddImage(user_texture_id,
+        bb.GetTL() + ImVec2(slice.TopLeftOffset.x, 0.0f),
+        bb.GetTR() - ImVec2(rightColWidth, -slice.TopLeftOffset.y),
+        slice.TopUV0, slice.TopUV1, col);
+    AddImage(user_texture_id,
+        bb.GetTR() - ImVec2(rightColWidth, 0.0f),
+        bb.GetTR() + ImVec2(0.0f, slice.TopLeftOffset.y),
+        slice.TopRightUV0, slice.TopRightUV1, col);
+
+    // MID:
+    const float bottomRowHeight = slice.Size.y - slice.TopLeftOffset.y - slice.InnerSize.y;
+    AddImage(user_texture_id,
+        bb.GetTL() + ImVec2(0.0f, slice.TopLeftOffset.y),
+        bb.GetBL() + ImVec2(slice.TopLeftOffset.x, -bottomRowHeight),
+        slice.MidLeftUV0, slice.MidLeftUV1, col);
+    AddImage(user_texture_id,
+        bb.GetTL() + slice.TopLeftOffset,
+        bb.GetBR() - ImVec2(rightColWidth, bottomRowHeight),
+        slice.MidUV0, slice.MidUV1, col);
+    AddImage(user_texture_id,
+        bb.GetTR() + ImVec2(-rightColWidth, slice.TopLeftOffset.y),
+        bb.GetBR() + ImVec2(0.0f, -bottomRowHeight),
+        slice.MidRightUV0, slice.MidRightUV1, col);
+
+    // BOTTOM:
+    AddImage(user_texture_id,
+        bb.GetBL() + ImVec2(0.0f, -bottomRowHeight),
+        bb.GetBL() + ImVec2(slice.TopLeftOffset.x, 0),
+        slice.BottomLeftUV0, slice.BottomLeftUV1, col);
+    AddImage(user_texture_id,
+        bb.GetBL() + ImVec2(slice.TopLeftOffset.x, -bottomRowHeight),
+        bb.GetBR() + ImVec2(-rightColWidth, 0),
+        slice.BottomUV0, slice.BottomUV1, col);
+    AddImage(user_texture_id,
+        bb.GetBR() + ImVec2(-rightColWidth, -bottomRowHeight),
+        bb.GetBR(),
+        slice.BottomRightUV0, slice.BottomRightUV1, col);
+}
 
 //-----------------------------------------------------------------------------
 // ImDrawListSplitter

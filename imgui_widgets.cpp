@@ -6730,6 +6730,9 @@ ImGuiTabBar::ImGuiTabBar()
     ReorderRequestDir = 0;
     WantLayout = VisibleTabWasSubmitted = false;
     LastTabItemIdx = -1;
+    bHasChildWindow = false;
+    IconSize = ImVec2(0.0f, 0.0f);
+    bShowLabel = true;
 }
 
 static int IMGUI_CDECL TabItemComparerByVisibleOffset(const void* lhs, const void* rhs)
@@ -6753,17 +6756,34 @@ static ImGuiPtrOrIndex GetTabBarRefFromTabBar(ImGuiTabBar* tab_bar)
     return ImGuiPtrOrIndex(tab_bar);
 }
 
-bool    ImGui::BeginTabBar(const char* str_id, ImGuiTabBarFlags flags)
+bool ImGui::BeginTabBar(const char* str_id, ImGuiTabBarFlags flags, bool bBeginChildWindow, const ImVec2 &childWindowSize,
+    const ImVec2 &iconSize, bool bShowLabel)
 {
     ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.CurrentWindow;
     if (window->SkipItems)
         return false;
 
+    const float lineHeight = g.FontSize > iconSize.y ? g.FontSize : iconSize.y;
+    ImRect tab_bar_bb = ImRect(
+        window->DC.CursorPos.x, window->DC.CursorPos.y,
+        window->WorkRect.Max.x, window->DC.CursorPos.y + lineHeight + (g.Style.ActiveTabNineSlice.Size.y - g.Style.ActiveTabNineSlice.InnerSize.y)
+    );
+    window->DrawList->AddRectTransparent(tab_bar_bb.Min, tab_bar_bb.Max, GetColorU32(ImGuiCol_TabBar));
+
+    if (bBeginChildWindow)
+    {
+        BeginChildEx(str_id, window->GetID(str_id), childWindowSize, true,
+            ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoClipping,
+            tab_bar_bb.GetHeight());
+    }
+
     ImGuiID id = window->GetID(str_id);
     ImGuiTabBar* tab_bar = g.TabBars.GetOrAddByKey(id);
-    ImRect tab_bar_bb = ImRect(window->DC.CursorPos.x, window->DC.CursorPos.y, window->WorkRect.Max.x, window->DC.CursorPos.y + g.FontSize + g.Style.FramePadding.y * 2);
+    tab_bar->bHasChildWindow = bBeginChildWindow;
     tab_bar->ID = id;
+    tab_bar->IconSize = iconSize;
+    tab_bar->bShowLabel = bShowLabel;
     return BeginTabBarEx(tab_bar, tab_bar_bb, flags | ImGuiTabBarFlags_IsFocused);
 }
 
@@ -6805,10 +6825,12 @@ bool    ImGui::BeginTabBarEx(ImGuiTabBar* tab_bar, const ImRect& tab_bar_bb, ImG
     tab_bar->FramePadding = g.Style.FramePadding;
 
     // Layout
-    ItemSize(ImVec2(tab_bar->OffsetMaxIdeal, tab_bar->BarRect.GetHeight()), tab_bar->FramePadding.y);
+    ItemSize(ImVec2(tab_bar->OffsetMaxIdeal, tab_bar->BarRect.GetHeight()), 0.0f);
     window->DC.CursorPos.x = tab_bar->BarRect.Min.x;
+    window->DC.CursorPos.y -= g.Style.ItemSpacing.y;
 
     // Draw separator
+#ifndef WIN98_STYLE
     const ImU32 col = GetColorU32((flags & ImGuiTabBarFlags_IsFocused) ? ImGuiCol_TabActive : ImGuiCol_TabUnfocusedActive);
     const float y = tab_bar->BarRect.Max.y - 1.0f;
     {
@@ -6816,6 +6838,7 @@ bool    ImGui::BeginTabBarEx(ImGuiTabBar* tab_bar, const ImRect& tab_bar_bb, ImG
         const float separator_max_x = tab_bar->BarRect.Max.x + IM_FLOOR(window->WindowPadding.x * 0.5f);
         window->DrawList->AddLine(ImVec2(separator_min_x, y), ImVec2(separator_max_x, y), col, 1.0f);
     }
+#endif
     return true;
 }
 
@@ -6932,13 +6955,13 @@ static void ImGui::TabBarLayout(ImGuiTabBar* tab_bar)
         // and we cannot wait for the next BeginTabItem() call. We cannot compute this width within TabBarAddTab() because font size depends on the active window.
         const char* tab_name = tab_bar->GetTabName(tab);
         const bool has_close_button = (tab->Flags & ImGuiTabItemFlags_NoCloseButton) ? false : true;
-        tab->ContentWidth = TabItemCalcSize(tab_name, has_close_button).x;
+        tab->Width = TabItemCalcSize(tab_name, has_close_button, tab_bar).x;
 
-        width_total_contents += (tab_n > 0 ? g.Style.ItemInnerSpacing.x : 0.0f) + tab->ContentWidth;
+        width_total_contents += (tab_n > 0 ? g.Style.ItemInnerSpacing.x : 0.0f) + tab->Width;
 
         // Store data so we can build an array sorted by width if we need to shrink tabs down
         g.ShrinkWidthBuffer[tab_n].Index = tab_n;
-        g.ShrinkWidthBuffer[tab_n].Width = tab->ContentWidth;
+        g.ShrinkWidthBuffer[tab_n].Width = tab->Width;
     }
 
     // Compute width
@@ -6958,7 +6981,7 @@ static void ImGui::TabBarLayout(ImGuiTabBar* tab_bar)
         for (int tab_n = 0; tab_n < tab_bar->Tabs.Size; tab_n++)
         {
             ImGuiTabItem* tab = &tab_bar->Tabs[tab_n];
-            tab->Width = ImMin(tab->ContentWidth, tab_max_width);
+            tab->Width = ImMin(tab->Width, tab_max_width);
             IM_ASSERT(tab->Width > 0.0f);
         }
     }
@@ -7018,6 +7041,11 @@ static void ImGui::TabBarLayout(ImGuiTabBar* tab_bar)
     // Clear name buffers
     if ((tab_bar->Flags & ImGuiTabBarFlags_DockNode) == 0)
         tab_bar->TabsNames.Buf.resize(0);
+
+    if (tab_bar->bHasChildWindow)
+    {
+        g.CurrentWindow->DC.CursorPos.x += g.CurrentWindow->WindowPadding.x;
+    }
 }
 
 // Dockables uses Name/ID in the global namespace. Non-dockable items use the ID stack.
@@ -7215,7 +7243,8 @@ static ImGuiTabItem* ImGui::TabBarTabListPopupButton(ImGuiTabBar* tab_bar)
 // - TabItemLabelAndCloseButton() [Internal]
 //-------------------------------------------------------------------------
 
-bool    ImGui::BeginTabItem(const char* label, bool* p_open, ImGuiTabItemFlags flags)
+bool ImGui::BeginTabItem(const char* label, bool* p_open, ImGuiTabItemFlags flags,
+    ImTextureID* user_texture_id, const ImVec2& uv0, const ImVec2& uv1, const ImU32 tint_col)
 {
     ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.CurrentWindow;
@@ -7228,7 +7257,7 @@ bool    ImGui::BeginTabItem(const char* label, bool* p_open, ImGuiTabItemFlags f
         IM_ASSERT_USER_ERROR(tab_bar, "BeginTabItem() Needs to be called between BeginTabBar() and EndTabBar()!");
         return false;
     }
-    bool ret = TabItemEx(tab_bar, label, p_open, flags);
+    bool ret = TabItemEx(tab_bar, label, p_open, flags, user_texture_id, uv0, uv1, tint_col);
     if (ret && !(flags & ImGuiTabItemFlags_NoPushId))
     {
         ImGuiTabItem* tab = &tab_bar->Tabs[tab_bar->LastTabItemIdx];
@@ -7256,7 +7285,8 @@ void    ImGui::EndTabItem()
         window->IDStack.pop_back();
 }
 
-bool    ImGui::TabItemEx(ImGuiTabBar* tab_bar, const char* label, bool* p_open, ImGuiTabItemFlags flags)
+bool ImGui::TabItemEx(ImGuiTabBar* tab_bar, const char* label, bool* p_open, ImGuiTabItemFlags flags,
+    ImTextureID* user_texture_id, const ImVec2& uv0, const ImVec2& uv1, const ImU32 tint_col)
 {
     // Layout whole tab bar if not already done
     if (tab_bar->WantLayout)
@@ -7287,7 +7317,8 @@ bool    ImGui::TabItemEx(ImGuiTabBar* tab_bar, const char* label, bool* p_open, 
         flags |= ImGuiTabItemFlags_NoCloseButton;
 
     // Calculate tab contents size
-    ImVec2 size = TabItemCalcSize(label, p_open != NULL);
+    ImVec2 size = TabItemCalcSize(label, p_open != NULL, tab_bar);
+    size.y = tab_bar->BarRect.GetHeight();
 
     // Acquire tab data
     ImGuiTabItem* tab = TabBarFindTabByID(tab_bar, id);
@@ -7318,7 +7349,7 @@ bool    ImGui::TabItemEx(ImGuiTabBar* tab_bar, const char* label, bool* p_open, 
     if (!tab_appearing && !(tab_bar->Flags & ImGuiTabBarFlags_Reorderable))
     {
         tab->Offset = tab_bar->OffsetNextTab;
-        tab_bar->OffsetNextTab += tab->Width + g.Style.ItemInnerSpacing.x;
+        tab_bar->OffsetNextTab += tab->Width;// + g.Style.ItemInnerSpacing.x;
     }
 
     // Update selected tab
@@ -7367,7 +7398,7 @@ bool    ImGui::TabItemEx(ImGuiTabBar* tab_bar, const char* label, bool* p_open, 
         PushClipRect(ImVec2(ImMax(bb.Min.x, tab_bar->BarRect.Min.x), bb.Min.y - 1), ImVec2(tab_bar->BarRect.Max.x, bb.Max.y), true);
 
     ImVec2 backup_cursor_max_pos = window->DC.CursorMaxPos;
-    ItemSize(bb.GetSize(), style.FramePadding.y);
+    ItemSize(bb.GetSize(), 0.0f);
     window->DC.CursorMaxPos = backup_cursor_max_pos;
 
     if (!ItemAdd(bb, id))
@@ -7411,20 +7442,15 @@ bool    ImGui::TabItemEx(ImGuiTabBar* tab_bar, const char* label, bool* p_open, 
         }
     }
 
-#if 0
-    if (hovered && g.HoveredIdNotActiveTimer > 0.50f && bb.GetWidth() < tab->ContentWidth)
-    {
-        // Enlarge tab display when hovering
-        bb.Max.x = bb.Min.x + IM_FLOOR(ImLerp(bb.GetWidth(), tab->ContentWidth, ImSaturate((g.HoveredIdNotActiveTimer - 0.40f) * 6.0f)));
-        display_draw_list = GetForegroundDrawList(window);
-        TabItemBackground(display_draw_list, bb, flags, GetColorU32(ImGuiCol_TitleBgActive));
-    }
-#endif
-
     // Render tab shape
     ImDrawList* display_draw_list = window->DrawList;
-    const ImU32 tab_col = GetColorU32((held || hovered) ? ImGuiCol_TabHovered : tab_contents_visible ? (tab_bar_focused ? ImGuiCol_TabActive : ImGuiCol_TabUnfocusedActive) : (tab_bar_focused ? ImGuiCol_Tab : ImGuiCol_TabUnfocused));
-    TabItemBackground(display_draw_list, bb, flags, tab_col);
+    const ImU32 tab_col = GetColorU32(tab_contents_visible ? ImGuiCol_TabActive : ((held || hovered) ? ImGuiCol_TabHovered : ImGuiCol_Tab));
+    ImRect bgBB = bb;
+    if (tab_contents_visible)
+    {
+        bgBB.Max.y += 2.0f; // overlap border
+    }
+    TabItemBackground(display_draw_list, bgBB, flags, tab_col, tab_contents_visible);
     RenderNavHighlight(bb, id);
 
     // Select with right mouse button. This is so the common idiom for context menu automatically highlight the current widget.
@@ -7435,14 +7461,26 @@ bool    ImGui::TabItemEx(ImGuiTabBar* tab_bar, const char* label, bool* p_open, 
     if (tab_bar->Flags & ImGuiTabBarFlags_NoCloseWithMiddleMouseButton)
         flags |= ImGuiTabItemFlags_NoCloseWithMiddleMouseButton;
 
+    // Render img
+    display_draw_list->AddImage(user_texture_id,
+        bb.Min + g.Style.ActiveTabNineSlice.TopLeftOffset,
+        bb.Min + g.Style.ActiveTabNineSlice.TopLeftOffset + tab_bar->IconSize, uv0, uv1, tint_col);
+
     // Render tab label, process close button
+    PushStyleColor(ImGuiCol_Text, GetColorU32(tab_contents_visible ? ImGuiCol_TabTextActive : ImGuiCol_TabText));
     const ImGuiID close_button_id = p_open ? window->GetID((void*)((intptr_t)id + 1)) : 0;
-    bool just_closed = TabItemLabelAndCloseButton(display_draw_list, bb, flags, tab_bar->FramePadding, label, id, close_button_id, tab_contents_visible);
+    ImRect labelBB = bb;
+    if (tab_bar->IconSize.x > 0.0f)
+    {
+        labelBB.Min.x += tab_bar->IconSize.x + g.Style.ItemInnerSpacing.x;
+    }
+    bool just_closed = TabItemLabelAndCloseButton(display_draw_list, labelBB, flags, g.Style.TabPadding, tab_bar->bShowLabel ? label : "", id, close_button_id, tab_contents_visible);
     if (just_closed && p_open != NULL)
     {
         *p_open = false;
         TabBarCloseTab(tab_bar, tab);
     }
+    PopStyleColor();
 
     // Restore main window position so user can draw there
     if (want_clip_rect)
@@ -7475,25 +7513,32 @@ void    ImGui::SetTabItemClosed(const char* label)
     }
 }
 
-ImVec2 ImGui::TabItemCalcSize(const char* label, bool has_close_button)
+ImVec2 ImGui::TabItemCalcSize(const char* label, bool has_close_button, const ImGuiTabBar* tab_bar)
 {
     ImGuiContext& g = *GImGui;
-    ImVec2 label_size = CalcTextSize(label, NULL, true);
-    ImVec2 size = ImVec2(label_size.x + g.Style.FramePadding.x, label_size.y + g.Style.FramePadding.y * 2.0f);
+    ImVec2 label_size = tab_bar->bShowLabel ? CalcTextSize(label, NULL, true) + ImVec2(g.Style.TabPadding.x, 0.0f) : ImVec2(0.0f, g.FontSize);
+    ImVec2 size = ImVec2(label_size.x, label_size.y + g.Style.TabPadding.y * 2.0f);
     if (has_close_button)
-        size.x += g.Style.FramePadding.x + (g.Style.ItemInnerSpacing.x + g.FontSize); // We use Y intentionally to fit the close button circle.
+        size.x += g.Style.TabPadding.x + (g.Style.ItemInnerSpacing.x + g.FontSize); // We use Y intentionally to fit the close button circle.
     else
-        size.x += g.Style.FramePadding.x + 1.0f;
+        size.x += g.Style.TabPadding.x + 1.0f;
+    if (tab_bar->IconSize.x > 0.0f)
+    {
+        size.x += g.Style.ItemInnerSpacing.x * 2.0f + tab_bar->IconSize.x;
+    }
+
     return ImVec2(ImMin(size.x, TabBarCalcMaxTabWidth()), size.y);
 }
 
-void ImGui::TabItemBackground(ImDrawList* draw_list, const ImRect& bb, ImGuiTabItemFlags flags, ImU32 col)
+void ImGui::TabItemBackground(ImDrawList* draw_list, const ImRect& bb, ImGuiTabItemFlags flags, ImU32 col, bool bActive)
 {
     // While rendering tabs, we trim 1 pixel off the top of our bounding box so they can fit within a regular frame height while looking "detached" from it.
     ImGuiContext& g = *GImGui;
     const float width = bb.GetWidth();
     IM_UNUSED(flags);
     IM_ASSERT(width > 0.0f);
+    draw_list->AddNineSlice(g.IO.Fonts->TexID, bb, bActive ? g.Style.ActiveTabNineSlice : g.Style.InactiveTabNineSlice, col);
+    /*
     const float rounding = ImMax(0.0f, ImMin(g.Style.TabRounding, width * 0.5f - 1.0f));
     const float y1 = bb.Min.y + 1.0f;
     const float y2 = bb.Max.y - 1.0f;
@@ -7510,6 +7555,7 @@ void ImGui::TabItemBackground(ImDrawList* draw_list, const ImRect& bb, ImGuiTabI
         draw_list->PathLineTo(ImVec2(bb.Max.x - 0.5f, y2));
         draw_list->PathStroke(GetColorU32(ImGuiCol_Border), false, g.Style.TabBorderSize);
     }
+     */
 }
 
 // Render text label (with custom clipping) + Unsaved Document marker + Close Button logic

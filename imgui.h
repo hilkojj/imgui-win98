@@ -280,7 +280,7 @@ namespace ImGui
     //    BeginPopup/EndPopup, etc. where the EndXXX call should only be called if the corresponding BeginXXX function
     //    returned true. Begin and BeginChild are the only odd ones out. Will be fixed in a future update.]
     // - Note that the bottom of window stack always contains a window called "Debug".
-    IMGUI_API bool          Begin(const char* name, bool* p_open = NULL, ImGuiWindowFlags flags = 0);
+    IMGUI_API bool          Begin(const char* name, bool* p_open = NULL, ImGuiWindowFlags flags = 0, float BgTopOffset = 0.0f);
     IMGUI_API void          End();
 
     // Child Windows
@@ -646,9 +646,10 @@ namespace ImGui
     IMGUI_API int           GetColumnsCount();
 
     // Tab Bars, Tabs
-    IMGUI_API bool          BeginTabBar(const char* str_id, ImGuiTabBarFlags flags = 0);        // create and append into a TabBar
+    IMGUI_API bool          BeginTabBar(const char* str_id, ImGuiTabBarFlags flags = 0, bool bBeginChildWindow = false, const ImVec2 &childWindowSize = ImVec2(0, 0), const ImVec2 &iconSize = ImVec2(0, 0), bool bShowLabel = true); // create and append into a TabBar
     IMGUI_API void          EndTabBar();                                                        // only call EndTabBar() if BeginTabBar() returns true!
-    IMGUI_API bool          BeginTabItem(const char* label, bool* p_open = NULL, ImGuiTabItemFlags flags = 0);// create a Tab. Returns true if the Tab is selected.
+    IMGUI_API bool          BeginTabItem(const char* label, bool* p_open = NULL, ImGuiTabItemFlags flags = 0,
+                            ImTextureID* user_texture_id = nullptr, const ImVec2& uv0 = ImVec2(0, 0), const ImVec2& uv1 = ImVec2(0, 0), const ImU32 tint_col = 0u);// create a Tab. Returns true if the Tab is selected.
     IMGUI_API void          EndTabItem();                                                       // only call EndTabItem() if BeginTabItem() returns true!
     IMGUI_API void          SetTabItemClosed(const char* tab_or_docked_window_label);           // notify TabBar or Docking system of a closed tab/window ahead (useful to reduce visual flicker on reorderable tab bars). For tab-bar: call after BeginTabBar() and before Tab submissions. Otherwise call with a window name.
 
@@ -814,6 +815,7 @@ enum ImGuiWindowFlags_
     ImGuiWindowFlags_NoNavInputs            = 1 << 18,  // No gamepad/keyboard navigation within the window
     ImGuiWindowFlags_NoNavFocus             = 1 << 19,  // No focusing toward this window with gamepad/keyboard navigation (e.g. skipped by CTRL+TAB)
     ImGuiWindowFlags_UnsavedDocument        = 1 << 20,  // Append '*' to title without affecting the ID, as a convenience to avoid using the ### operator. When used in a tab/docking context, tab is selected on closure and closure is deferred by one frame to allow code to cancel the closure (with a confirmation popup, etc.) without flicker.
+    ImGuiWindowFlags_NoClipping             = 1 << 21,
     ImGuiWindowFlags_NoNav                  = ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoNavFocus,
     ImGuiWindowFlags_NoDecoration           = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse,
     ImGuiWindowFlags_NoInputs               = ImGuiWindowFlags_NoMouseInputs | ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoNavFocus,
@@ -1177,6 +1179,9 @@ enum ImGuiCol_
     ImGuiCol_TabActive,
     ImGuiCol_TabUnfocused,
     ImGuiCol_TabUnfocusedActive,
+    ImGuiCol_TabText,
+    ImGuiCol_TabTextActive,
+    ImGuiCol_TabBar,
     ImGuiCol_PlotLines,
     ImGuiCol_PlotLinesHovered,
     ImGuiCol_PlotHistogram,
@@ -1444,6 +1449,7 @@ struct ImGuiStyle
     float       ScrollbarRounding;          // Radius of grab corners for scrollbar.
     float       GrabMinSize;                // Minimum width/height of a grab box for slider/scrollbar.
     float       GrabRounding;               // Radius of grabs corners rounding. Set to 0.0f to have rectangular slider grabs.
+    ImVec2      TabPadding;
     float       TabRounding;                // Radius of upper corners of a tab. Set to 0.0f to have rectangular tabs.
     float       TabBorderSize;              // Thickness of border around tabs.
     float       TabMinWidthForUnselectedCloseButton; // Minimum width for close button to appears on an unselected tab when hovered. Set to 0.0f to always show when hovering, set to FLT_MAX to never show close button unless selected.
@@ -1477,6 +1483,26 @@ struct ImGuiStyle
 
     ImVec2 ScrollDownButtonUV0;
     ImVec2 ScrollDownButtonUV1;
+
+    struct NineSlice
+    {
+        ImVec2 TopLeftUV0, TopLeftUV1;
+        ImVec2 TopUV0, TopUV1;
+        ImVec2 TopRightUV0, TopRightUV1;
+
+        ImVec2 MidLeftUV0, MidLeftUV1;
+        ImVec2 MidUV0, MidUV1;
+        ImVec2 MidRightUV0, MidRightUV1;
+
+        ImVec2 BottomLeftUV0, BottomLeftUV1;
+        ImVec2 BottomUV0, BottomUV1;
+        ImVec2 BottomRightUV0, BottomRightUV1;
+
+        ImVec2 Size, TopLeftOffset, InnerSize;
+    };
+
+    NineSlice ActiveTabNineSlice;
+    NineSlice InactiveTabNineSlice;
 
     IMGUI_API ImGuiStyle();
     IMGUI_API void ScaleAllSizes(float scale_factor);
@@ -2095,6 +2121,7 @@ struct ImDrawList
     IMGUI_API void  AddRectGradient(const ImVec2& p_min, const ImVec2& p_max, ImU32 col);                                                                                                      // a: upper-left, b: lower-right (== upper-left + size)
     IMGUI_API void  AddRectFaded(const ImVec2& p_min, const ImVec2& p_max, ImU32 col);                                                                                                      // a: upper-left, b: lower-right (== upper-left + size)
     IMGUI_API void  AddRectBordered(const ImVec2& p_min, const ImVec2& p_max, ImU32 col, bool bInset, bool bPressed = false);                                                                                                      // a: upper-left, b: lower-right (== upper-left + size)
+    IMGUI_API void  AddRectTransparent(const ImVec2& p_min, const ImVec2& p_max, ImU32 col);
     IMGUI_API void  AddRectFilledMultiColor(const ImVec2& p_min, const ImVec2& p_max, ImU32 col_upr_left, ImU32 col_upr_right, ImU32 col_bot_right, ImU32 col_bot_left);
     IMGUI_API void  AddQuad(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, ImU32 col, float thickness = 1.0f);
     IMGUI_API void  AddQuadFilled(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, ImU32 col);
@@ -2117,6 +2144,8 @@ struct ImDrawList
     IMGUI_API void  AddImage(ImTextureID user_texture_id, const ImVec2& p_min, const ImVec2& p_max, const ImVec2& uv_min = ImVec2(0, 0), const ImVec2& uv_max = ImVec2(1, 1), ImU32 col = IM_COL32_WHITE);
     IMGUI_API void  AddImageQuad(ImTextureID user_texture_id, const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, const ImVec2& uv1 = ImVec2(0, 0), const ImVec2& uv2 = ImVec2(1, 0), const ImVec2& uv3 = ImVec2(1, 1), const ImVec2& uv4 = ImVec2(0, 1), ImU32 col = IM_COL32_WHITE);
     IMGUI_API void  AddImageRounded(ImTextureID user_texture_id, const ImVec2& p_min, const ImVec2& p_max, const ImVec2& uv_min, const ImVec2& uv_max, ImU32 col, float rounding, ImDrawCornerFlags rounding_corners = ImDrawCornerFlags_All);
+
+    IMGUI_API void  AddNineSlice(ImTextureID user_texture_id, const class ImRect& bb, const ImGuiStyle::NineSlice& slice, ImU32 col = IM_COL32_WHITE);
 
     // Stateful path API, add points then finish with PathFillConvex() or PathStroke()
     inline    void  PathClear()                                                 { _Path.Size = 0; }
