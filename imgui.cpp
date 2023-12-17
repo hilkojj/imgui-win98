@@ -4704,9 +4704,9 @@ bool ImGui::BeginChildEx(const char* name, ImGuiID id, const ImVec2& size_arg, b
     ImVec2 size = ImFloor(size_arg);
     const int auto_fit_axises = ((size.x == 0.0f) ? (1 << ImGuiAxis_X) : 0x00) | ((size.y == 0.0f) ? (1 << ImGuiAxis_Y) : 0x00);
     if (size.x <= 0.0f)
-        size.x = ImMax(content_avail.x + ImMax(0.0f, size.x), 4.0f); // Arbitrary minimum child size (0.0f causing too much issues)
+        size.x = ImMax(content_avail.x + size.x, 4.0f); // Arbitrary minimum child size (0.0f causing too much issues)
     if (size.y <= 0.0f)
-        size.y = ImMax(content_avail.y + ImMax(0.0f, size.y), 4.0f);
+        size.y = ImMax(content_avail.y + size.y, 4.0f);
     SetNextWindowSize(size);
 
     // Build up name. If you need to append to a same child from multiple location in the ID stack, use BeginChild(ImGuiID id) with a stable value.
@@ -5316,7 +5316,14 @@ void ImGui::RenderWindowDecorations(ImGuiWindow* window, const ImRect& title_bar
             {
                 window->DrawList->AddRectFaded(from + ImVec2(0.0f, 4.0f), to + ImVec2(0.0f, 4.0f), GetColorU32(ImGuiCol_WindowShadow));
             }
-            window->DrawList->AddRectBordered(from, to, bg_col, !(window->Flags & ImGuiWindowFlags_NoTitleBar));
+            if (window->Flags & ImGuiWindowFlags_Inset)
+            {
+                ImGui::WinAddRect(from, to, bg_col, true);
+            }
+            else
+            {
+                window->DrawList->AddRectBordered(from, to, bg_col, !(window->Flags & ImGuiWindowFlags_NoTitleBar));
+            }
         }
 
         // Menu bar

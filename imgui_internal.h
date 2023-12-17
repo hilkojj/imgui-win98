@@ -623,6 +623,7 @@ enum ImGuiButtonFlags_
     ImGuiButtonFlags_MouseButtonMiddle      = 1 << 18,  // react on center mouse button
 
     ImGuiButtonFlags_Win98Inset             = 1 << 19,  // render the button as if it was pressed
+    ImGuiButtonFlags_NoInactiveDecorations  = 1 << 20,
 
     ImGuiButtonFlags_MouseButtonMask_       = ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight | ImGuiButtonFlags_MouseButtonMiddle,
     ImGuiButtonFlags_MouseButtonShift_      = 16,
