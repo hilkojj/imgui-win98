@@ -1485,6 +1485,9 @@ struct ImGuiStyle
     ImVec2 ScrollDownButtonUV0;
     ImVec2 ScrollDownButtonUV1;
 
+    ImVec2 CheckMarkUV0;
+    ImVec2 CheckMarkUV1;
+
     struct NineSlice
     {
         ImVec2 TopLeftUV0, TopLeftUV1;
