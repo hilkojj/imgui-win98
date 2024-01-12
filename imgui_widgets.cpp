@@ -672,7 +672,7 @@ bool ImGui::ButtonEx(const char* label, const ImVec2& size_arg, ImGuiButtonFlags
 #ifdef WIN98_STYLE
 
     const bool bInset = held && hovered;
-    WinAddRect(bb.Min, bb.Max, col, bInset, ImGui::GetColorU32(ImGui::GetColorU32(bDisabled ? ImGuiCol_TextDisabled : ImGuiCol_Text)), bDisabled);
+    WinAddRect(bb.Min, bb.Max, col, bInset, ImGui::GetColorU32(ImGui::GetColorU32(bDisabled ? ImGuiCol_TextDisabled : ImGuiCol_ButtonText)), bDisabled);
     PushStyleColor(ImGuiCol_Text, GetColorU32(bInset ? ImGuiCol_ButtonTextActive : ImGuiCol_ButtonText));
     ImVec2 clippedTextMin = bb.Min + style.FramePadding;
     ImVec2 clippedTextMax = bb.Max - style.FramePadding;
@@ -1155,7 +1155,7 @@ bool ImGui::ImageButtonEx(ImGuiID id, ImTextureID texture_id, const ImVec2& size
     const bool bInset = (held && hovered) || (flags & ImGuiButtonFlags_Win98Inset);
     if (!(flags & ImGuiButtonFlags_NoInactiveDecorations) || hovered || bInset)
     {
-        WinAddRect(bb.Min, bb.Max, col, bInset, ImGui::GetColorU32(bDisabled ? ImGuiCol_TextDisabled : ImGuiCol_Text), bDisabled);
+        WinAddRect(bb.Min, bb.Max, col, bInset, ImGui::GetColorU32(bDisabled ? ImGuiCol_TextDisabled : ImGuiCol_ButtonText), bDisabled);
         if (bInset)
         {
             imageMin += ImVec2(1.0f, 1.0f);
