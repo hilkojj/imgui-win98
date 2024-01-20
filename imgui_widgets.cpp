@@ -1155,7 +1155,10 @@ bool ImGui::ImageButtonEx(ImGuiID id, ImTextureID texture_id, const ImVec2& size
     const bool bInset = (held && hovered) || (flags & ImGuiButtonFlags_Win98Inset);
     if (!(flags & ImGuiButtonFlags_NoInactiveDecorations) || hovered || bInset)
     {
-        WinAddRect(bb.Min, bb.Max, col, bInset, ImGui::GetColorU32(bDisabled ? ImGuiCol_TextDisabled : ImGuiCol_ButtonText), bDisabled);
+        if (!(flags & ImGuiButtonFlags_NoDecorations))
+        {
+            WinAddRect(bb.Min, bb.Max, col, bInset, ImGui::GetColorU32(bDisabled ? ImGuiCol_TextDisabled : ImGuiCol_ButtonText), bDisabled);
+        }
         if (bInset)
         {
             imageMin += ImVec2(1.0f, 1.0f);

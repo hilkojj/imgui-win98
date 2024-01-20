@@ -624,6 +624,7 @@ enum ImGuiButtonFlags_
 
     ImGuiButtonFlags_Win98Inset             = 1 << 19,  // render the button as if it was pressed
     ImGuiButtonFlags_NoInactiveDecorations  = 1 << 20,
+    ImGuiButtonFlags_NoDecorations          = 1 << 21,
 
     ImGuiButtonFlags_MouseButtonMask_       = ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight | ImGuiButtonFlags_MouseButtonMiddle,
     ImGuiButtonFlags_MouseButtonShift_      = 16,
