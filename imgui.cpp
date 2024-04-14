@@ -3120,7 +3120,7 @@ bool ImGui::IsClippedEx(const ImRect& bb, ImGuiID id, bool clip_even_when_logged
 {
     ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.CurrentWindow;
-    if (!bb.Overlaps(window->ClipRect))
+    if (!bb.Overlaps(ImRect(window->DrawList->GetClipRectMin(), window->DrawList->GetClipRectMax())))
         if (id == 0 || (id != g.ActiveId && id != g.NavId))
             if (clip_even_when_logged || !g.LogEnabled)
                 return true;
