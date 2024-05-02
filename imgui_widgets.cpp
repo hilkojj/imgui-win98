@@ -671,8 +671,14 @@ bool ImGui::ButtonEx(const char* label, const ImVec2& size_arg, ImGuiButtonFlags
     const ImU32 col = GetColorU32(bDisabled ? ImGuiCol_ButtonDisabled : ((held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button));
 #ifdef WIN98_STYLE
 
-    const bool bInset = held && hovered;
-    WinAddRect(bb.Min, bb.Max, col, bInset, ImGui::GetColorU32(ImGui::GetColorU32(bDisabled ? ImGuiCol_TextDisabled : ImGuiCol_ButtonText)), bDisabled);
+    const bool bInset = (held && hovered) || (flags & ImGuiButtonFlags_Win98Inset);
+    if (!(flags & ImGuiButtonFlags_NoDecorations) && (!(flags & ImGuiButtonFlags_NoInactiveDecorations) || hovered || bInset))
+    {
+        WinAddRect(bb.Min, bb.Max, col, bInset,
+            (flags & ImGuiButtonFlags_NoOutline) ? 0u :
+            ImGui::GetColorU32(ImGui::GetColorU32(bDisabled ? ImGuiCol_TextDisabled : ImGuiCol_ButtonText)),
+            bDisabled);
+    }
     PushStyleColor(ImGuiCol_Text, GetColorU32(bInset ? ImGuiCol_ButtonTextActive : ImGuiCol_ButtonText));
     ImVec2 clippedTextMin = bb.Min + style.FramePadding;
     ImVec2 clippedTextMax = bb.Max - style.FramePadding;
@@ -697,9 +703,9 @@ bool ImGui::ButtonEx(const char* label, const ImVec2& size_arg, ImGuiButtonFlags
     return pressed;
 }
 
-bool ImGui::Button(const char* label, const ImVec2& size_arg)
+bool ImGui::Button(const char* label, const ImVec2& size_arg, ImGuiButtonFlags flags)
 {
-    return ButtonEx(label, size_arg, 0);
+    return ButtonEx(label, size_arg, flags);
 }
 
 // Small buttons fits within text without additional vertical spacing.

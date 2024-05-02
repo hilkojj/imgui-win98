@@ -5289,7 +5289,15 @@ void ImGui::RenderWindowDecorations(ImGuiWindow* window, const ImRect& title_bar
     // As we highlight the title bar when want_focus is set, multiple reappearing windows will have have their title bar highlighted on their reappearing frame.
     const float window_rounding = window->WindowRounding;
     const float window_border_size = window->WindowBorderSize;
-    const bool bShowShadow = (window->ChildId == 0 && title_bar_is_highlight && !(flags & ImGuiWindowFlags_MenuBar)) || (flags & ImGuiWindowFlags_Tooltip);
+    const bool bShowShadow =
+        (
+            window->ChildId == 0
+            && (title_bar_is_highlight || (flags & ImGuiWindowFlags_AlwaysShadow))
+            && !(flags & ImGuiWindowFlags_MenuBar)
+        )
+        ||
+        (flags & ImGuiWindowFlags_Tooltip);
+
     ImU32 bg_col = GetColorU32(GetWindowBgColorIdxFromFlags(flags));
 
     if (window->Collapsed)
@@ -5318,7 +5326,14 @@ void ImGui::RenderWindowDecorations(ImGuiWindow* window, const ImRect& title_bar
             }
             if (window->Flags & ImGuiWindowFlags_Inset)
             {
-                ImGui::WinAddRect(from, to, bg_col, true);
+                if (window->Flags & ImGuiWindowFlags_ChildWindow)
+                {
+                    ImGui::WinAddRect(from, to, bg_col, true);
+                }
+                else
+                {
+                    window->DrawList->AddRectBordered(from, to, bg_col, true);
+                }
             }
             else
             {
