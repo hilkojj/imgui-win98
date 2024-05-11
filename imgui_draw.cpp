@@ -2462,16 +2462,16 @@ void ImFontAtlasBuildPackCustomRects(ImFontAtlas* atlas, void* stbrp_context_opa
     memset(pack_rects.Data, 0, (size_t)pack_rects.size_in_bytes());
     for (int i = 0; i < user_rects.Size; i++)
     {
-        pack_rects[i].w = user_rects[i].Width;
-        pack_rects[i].h = user_rects[i].Height;
+        pack_rects[i].w = user_rects[i].Width + 2;
+        pack_rects[i].h = user_rects[i].Height + 2;
     }
     stbrp_pack_rects(pack_context, &pack_rects[0], pack_rects.Size);
     for (int i = 0; i < pack_rects.Size; i++)
         if (pack_rects[i].was_packed)
         {
-            user_rects[i].X = pack_rects[i].x;
-            user_rects[i].Y = pack_rects[i].y;
-            IM_ASSERT(pack_rects[i].w == user_rects[i].Width && pack_rects[i].h == user_rects[i].Height);
+            user_rects[i].X = pack_rects[i].x + 1;
+            user_rects[i].Y = pack_rects[i].y + 1;
+            IM_ASSERT(pack_rects[i].w - 2 == user_rects[i].Width && pack_rects[i].h - 2 == user_rects[i].Height);
             atlas->TexHeight = ImMax(atlas->TexHeight, pack_rects[i].y + pack_rects[i].h);
         }
 }
