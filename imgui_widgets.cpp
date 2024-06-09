@@ -2832,7 +2832,7 @@ bool ImGui::SliderScalar(const char* label, ImGuiDataType data_type, void* p_dat
 
     // Render grab
     if (grab_bb.Max.x > grab_bb.Min.x)
-        window->DrawList->AddRectFilled(grab_bb.Min, grab_bb.Max, GetColorU32(g.ActiveId == id ? ImGuiCol_SliderGrabActive : ImGuiCol_SliderGrab), style.GrabRounding);
+        window->DrawList->AddRectBordered(grab_bb.Min, grab_bb.Max, GetColorU32(g.ActiveId == id ? ImGuiCol_SliderGrabActive : ImGuiCol_SliderGrab), false);
 
     // Display value using user-provided display format so user can add prefix/suffix/decorations to the value.
     char value_buf[64];
@@ -7474,7 +7474,7 @@ bool ImGui::TabItemEx(ImGuiTabBar* tab_bar, const char* label, bool* p_open, ImG
         flags |= ImGuiTabItemFlags_NoCloseWithMiddleMouseButton;
 
     // Render img
-    display_draw_list->AddImage(user_texture_id,
+    display_draw_list->AddImage(*user_texture_id,
         bb.Min + g.Style.ActiveTabNineSlice.TopLeftOffset,
         bb.Min + g.Style.ActiveTabNineSlice.TopLeftOffset + tab_bar->IconSize, uv0, uv1, tint_col);
 
