@@ -7474,9 +7474,12 @@ bool ImGui::TabItemEx(ImGuiTabBar* tab_bar, const char* label, bool* p_open, ImG
         flags |= ImGuiTabItemFlags_NoCloseWithMiddleMouseButton;
 
     // Render img
-    display_draw_list->AddImage(*user_texture_id,
-        bb.Min + g.Style.ActiveTabNineSlice.TopLeftOffset,
-        bb.Min + g.Style.ActiveTabNineSlice.TopLeftOffset + tab_bar->IconSize, uv0, uv1, tint_col);
+    if (user_texture_id != nullptr)
+    {
+        display_draw_list->AddImage(*user_texture_id,
+            bb.Min + g.Style.ActiveTabNineSlice.TopLeftOffset,
+            bb.Min + g.Style.ActiveTabNineSlice.TopLeftOffset + tab_bar->IconSize, uv0, uv1, tint_col);
+    }
 
     // Render tab label, process close button
     PushStyleColor(ImGuiCol_Text, GetColorU32(tab_contents_visible ? ImGuiCol_TabTextActive : ImGuiCol_TabText));
