@@ -649,7 +649,7 @@ namespace ImGui
     IMGUI_API bool          BeginTabBar(const char* str_id, ImGuiTabBarFlags flags = 0, bool bBeginChildWindow = false, const ImVec2 &childWindowSize = ImVec2(0, 0), const ImVec2 &iconSize = ImVec2(0, 0), bool bShowLabel = true); // create and append into a TabBar
     IMGUI_API void          EndTabBar();                                                        // only call EndTabBar() if BeginTabBar() returns true!
     IMGUI_API bool          BeginTabItem(const char* label, bool* p_open = NULL, ImGuiTabItemFlags flags = 0,
-                            ImTextureID* user_texture_id = nullptr, const ImVec2& uv0 = ImVec2(0, 0), const ImVec2& uv1 = ImVec2(0, 0), const ImU32 tint_col = 0u);// create a Tab. Returns true if the Tab is selected.
+                            ImTextureID* user_texture_id = nullptr, const ImVec2& uv0 = ImVec2(0, 0), const ImVec2& uv1 = ImVec2(0, 0), const ImU32 tint_col = 0u, const ImVec2& imageSize = ImVec2(-1, -1), const ImVec2& imageOffset = ImVec2(-1, -1));// create a Tab. Returns true if the Tab is selected.
     IMGUI_API void          EndTabItem();                                                       // only call EndTabItem() if BeginTabItem() returns true!
     IMGUI_API void          SetTabItemClosed(const char* tab_or_docked_window_label);           // notify TabBar or Docking system of a closed tab/window ahead (useful to reduce visual flicker on reorderable tab bars). For tab-bar: call after BeginTabBar() and before Tab submissions. Otherwise call with a window name.
 
@@ -1223,6 +1223,7 @@ enum ImGuiStyleVar_
     ImGuiStyleVar_WindowTitleAlign,    // ImVec2    WindowTitleAlign
     ImGuiStyleVar_ChildRounding,       // float     ChildRounding
     ImGuiStyleVar_ChildBorderSize,     // float     ChildBorderSize
+    ImGuiStyleVar_PopupPadding,        // ImVec2    PopupPadding
     ImGuiStyleVar_PopupRounding,       // float     PopupRounding
     ImGuiStyleVar_PopupBorderSize,     // float     PopupBorderSize
     ImGuiStyleVar_FramePadding,        // ImVec2    FramePadding
@@ -1439,6 +1440,7 @@ struct ImGuiStyle
     ImGuiDir    WindowMenuButtonPosition;   // Side of the collapsing/docking button in the title bar (None/Left/Right). Defaults to ImGuiDir_Left.
     float       ChildRounding;              // Radius of child window corners rounding. Set to 0.0f to have rectangular windows.
     float       ChildBorderSize;            // Thickness of border around child windows. Generally set to 0.0f or 1.0f. (Other values are not well tested and more CPU/GPU costly).
+    ImVec2      PopupPadding;               // Added by hilkojj
     float       PopupRounding;              // Radius of popup window corners rounding. (Note that tooltip windows use WindowRounding)
     float       PopupBorderSize;            // Thickness of border around popup/tooltip windows. Generally set to 0.0f or 1.0f. (Other values are not well tested and more CPU/GPU costly).
     ImVec2      FramePadding;               // Padding within a framed rectangle (used by most widgets).

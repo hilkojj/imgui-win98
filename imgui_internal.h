@@ -1925,7 +1925,7 @@ namespace ImGui
     IMGUI_API void          TabBarCloseTab(ImGuiTabBar* tab_bar, ImGuiTabItem* tab);
     IMGUI_API void          TabBarQueueChangeTabOrder(ImGuiTabBar* tab_bar, const ImGuiTabItem* tab, int dir);
     IMGUI_API bool          TabItemEx(ImGuiTabBar* tab_bar, const char* label, bool* p_open, ImGuiTabItemFlags flags,
-                            ImTextureID* user_texture_id = nullptr, const ImVec2& uv0 = ImVec2(0, 0), const ImVec2& uv1 = ImVec2(0, 0), const ImU32 tint_col = 0u);
+                            ImTextureID* user_texture_id = nullptr, ImVec2 uv0 = ImVec2(0, 0), ImVec2 uv1 = ImVec2(0, 0), const ImU32 tint_col = 0u, const ImVec2& imageSize = ImVec2(-1, -1), const ImVec2& imageOffset = ImVec2(-1, -1));
     IMGUI_API ImVec2        TabItemCalcSize(const char* label, bool has_close_button, const ImGuiTabBar* tab_bar);
     IMGUI_API void          TabItemBackground(ImDrawList* draw_list, const ImRect& bb, ImGuiTabItemFlags flags, ImU32 col, bool bActive);
     IMGUI_API bool          TabItemLabelAndCloseButton(ImDrawList* draw_list, const ImRect& bb, ImGuiTabItemFlags flags, ImVec2 frame_padding, const char* label, ImGuiID tab_id, ImGuiID close_button_id, bool is_contents_visible);

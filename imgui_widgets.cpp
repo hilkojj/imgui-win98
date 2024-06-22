@@ -7256,7 +7256,8 @@ static ImGuiTabItem* ImGui::TabBarTabListPopupButton(ImGuiTabBar* tab_bar)
 //-------------------------------------------------------------------------
 
 bool ImGui::BeginTabItem(const char* label, bool* p_open, ImGuiTabItemFlags flags,
-    ImTextureID* user_texture_id, const ImVec2& uv0, const ImVec2& uv1, const ImU32 tint_col)
+    ImTextureID* user_texture_id, const ImVec2& uv0, const ImVec2& uv1, const ImU32 tint_col, const ImVec2& imageSize,
+    const ImVec2& imageOffset)
 {
     ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.CurrentWindow;
@@ -7269,7 +7270,7 @@ bool ImGui::BeginTabItem(const char* label, bool* p_open, ImGuiTabItemFlags flag
         IM_ASSERT_USER_ERROR(tab_bar, "BeginTabItem() Needs to be called between BeginTabBar() and EndTabBar()!");
         return false;
     }
-    bool ret = TabItemEx(tab_bar, label, p_open, flags, user_texture_id, uv0, uv1, tint_col);
+    bool ret = TabItemEx(tab_bar, label, p_open, flags, user_texture_id, uv0, uv1, tint_col, imageSize, imageOffset);
     if (ret && !(flags & ImGuiTabItemFlags_NoPushId))
     {
         ImGuiTabItem* tab = &tab_bar->Tabs[tab_bar->LastTabItemIdx];
@@ -7298,7 +7299,7 @@ void    ImGui::EndTabItem()
 }
 
 bool ImGui::TabItemEx(ImGuiTabBar* tab_bar, const char* label, bool* p_open, ImGuiTabItemFlags flags,
-    ImTextureID* user_texture_id, const ImVec2& uv0, const ImVec2& uv1, const ImU32 tint_col)
+    ImTextureID* user_texture_id, ImVec2 uv0, ImVec2 uv1, const ImU32 tint_col, const ImVec2& imageSize, const ImVec2& imageOffset)
 {
     // Layout whole tab bar if not already done
     if (tab_bar->WantLayout)
@@ -7476,9 +7477,33 @@ bool ImGui::TabItemEx(ImGuiTabBar* tab_bar, const char* label, bool* p_open, ImG
     // Render img
     if (user_texture_id != nullptr)
     {
-        display_draw_list->AddImage(*user_texture_id,
+        ImVec2 imageBBMin = bb.Min + g.Style.ActiveTabNineSlice.TopLeftOffset + imageOffset * ImVec2(0.5f, -0.5f);
+        ImVec2 croppedImageSize = tab_bar->IconSize;
+        if (imageSize.x > 0.0f)
+        {
+            croppedImageSize = imageSize;
+            const ImVec2 sizeDiff = imageSize - tab_bar->IconSize;
+            imageBBMin.x += int(-sizeDiff.x * 0.5f);
+            imageBBMin.y += int(-sizeDiff.y * 0.5f);
+        }
+
+        const ImRect clipRect(
             bb.Min + g.Style.ActiveTabNineSlice.TopLeftOffset,
-            bb.Min + g.Style.ActiveTabNineSlice.TopLeftOffset + tab_bar->IconSize, uv0, uv1, tint_col);
+            bb.Min + g.Style.ActiveTabNineSlice.TopLeftOffset + tab_bar->IconSize
+        );
+        const ImRect imageRect(imageBBMin, imageBBMin + croppedImageSize);
+
+        const bool bPushClipRect = !clipRect.Contains(imageRect.Min) || !clipRect.Contains(imageRect.Max);
+
+        if (bPushClipRect)
+        {
+            display_draw_list->PushClipRect(clipRect.Min, clipRect.Max, false);
+        }
+        display_draw_list->AddImage(*user_texture_id, imageRect.Min, imageRect.Max, uv0, uv1, tint_col);
+        if (bPushClipRect)
+        {
+            display_draw_list->PopClipRect();
+        }
     }
 
     // Render tab label, process close button
