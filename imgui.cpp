@@ -5706,7 +5706,7 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags, float 
         else
             window->WindowBorderSize = (bIsPopup && !(flags & ImGuiWindowFlags_Modal)) ? style.PopupBorderSize : style.WindowBorderSize;
         window->WindowPadding = bIsPopup ? style.PopupPadding : style.WindowPadding;
-        if (!(flags & ImGuiWindowFlags_NoTitleBar))
+        if (!(flags & ImGuiWindowFlags_NoTitleBar) && !(flags & ImGuiWindowFlags_AlwaysUseWindowPadding))
         {
             window->WindowPadding = ImVec2(window->WindowBorderSize, window->WindowBorderSize * 0.5f);
         }
