@@ -679,7 +679,7 @@ bool ImGui::ButtonEx(const char* label, const ImVec2& size_arg, ImGuiButtonFlags
             ImGui::GetColorU32(ImGui::GetColorU32(bDisabled ? ImGuiCol_TextDisabled : ImGuiCol_ButtonText)),
             bDisabled);
     }
-    PushStyleColor(ImGuiCol_Text, GetColorU32(bInset ? ImGuiCol_ButtonTextActive : ImGuiCol_ButtonText));
+    PushStyleColor(ImGuiCol_Text, GetColorU32(bInset ? ImGuiCol_ButtonTextActive : (bDisabled ? ImGuiCol_ButtonTextDisabled : ImGuiCol_ButtonText)));
     ImVec2 clippedTextMin = bb.Min + style.FramePadding;
     ImVec2 clippedTextMax = bb.Max - style.FramePadding;
     if (bInset)
@@ -2342,6 +2342,12 @@ bool ImGui::DragScalar(const char* label, ImGuiDataType data_type, void* p_data,
     // Tabbing or CTRL-clicking on Drag turns it into an input box
     const bool hovered = ItemHoverable(frame_bb, id);
     bool temp_input_is_active = TempInputIsActive(id);
+
+    if (hovered || temp_input_is_active)
+    {
+        ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
+    }
+
     bool temp_input_start = false;
     if (!temp_input_is_active)
     {
