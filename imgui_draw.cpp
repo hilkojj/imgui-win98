@@ -308,7 +308,7 @@ void ImGui::StyleWin98(ImGuiStyle* dst)
             {
                 ImU32* p = (ImU32*)tex_pixels + (rect->Y + y) * tex_width + (rect->X);
                 for (int x = rect->Width; x > 0; x--) {
-                    if (black) *p = IM_COL32(255, 0, 0, 255);
+                    if (black) *p = IM_COL32_BLACK;
                     p ++;
                     run_size ++;
                     if (run_size == *run) {
