@@ -1467,18 +1467,44 @@ void ImDrawList::AddImageRounded(ImTextureID user_texture_id, const ImVec2& p_mi
         PopTextureID();
 }
 
-void ImDrawList::AddNineSlice(ImTextureID user_texture_id, const ImRect& bb, const ImGuiStyle::NineSlice &slice, ImU32 col)
+void ImDrawList::AddNineSlice(ImTextureID user_texture_id, const ImRect& bb, const ImGuiStyle::NineSlice &slice, const ImU32 col,
+    const bool bRepeatInner, const int repeatInnerMidAxis)
 {
+    auto repeatInnerSegment = [&] (const ImVec2 &innerMin, const ImVec2 &innerMax, const ImVec2 &uv0, const ImVec2 &uv1, const int axis)
+    {
+        const float width = innerMax[axis] - innerMin[axis];
+        for (int i = 0; i < int(ceil(width / slice.InnerSize[axis])); i++)
+        {
+            ImVec2 segmentMin = innerMin;
+            segmentMin[axis] += float(i) * slice.InnerSize[axis];
+            ImVec2 segmentMax = innerMax;
+            segmentMax[axis] = segmentMin[axis] + slice.InnerSize[axis];
+            ImVec2 segmentUV1 = uv1;
+            if (segmentMax[axis] > innerMax[axis])
+            {
+                const float overshoot = segmentMax[axis] - innerMax[axis];
+                segmentUV1[axis] += (uv1[axis] - uv0[axis]) * (overshoot / slice.InnerSize[axis]);
+            }
+            AddImage(user_texture_id, segmentMin, segmentMax, uv0, segmentUV1, col);
+        }
+    };
+
     // TOP:
     AddImage(user_texture_id,
         bb.GetTL(),
         bb.GetTL() + slice.TopLeftOffset,
         slice.TopLeftUV0, slice.TopLeftUV1, col);
     const float rightColWidth = slice.Size.x - slice.TopLeftOffset.x - slice.InnerSize.x;
-    AddImage(user_texture_id,
-        bb.GetTL() + ImVec2(slice.TopLeftOffset.x, 0.0f),
-        bb.GetTR() - ImVec2(rightColWidth, -slice.TopLeftOffset.y),
-        slice.TopUV0, slice.TopUV1, col);
+    const ImVec2 topInnerMin = bb.GetTL() + ImVec2(slice.TopLeftOffset.x, 0.0f);
+    const ImVec2 topInnerMax = bb.GetTR() - ImVec2(rightColWidth, -slice.TopLeftOffset.y);
+    if (bRepeatInner)
+    {
+        repeatInnerSegment(topInnerMin, topInnerMax, slice.TopUV0, slice.TopUV1, 0);
+    }
+    else
+    {
+        AddImage(user_texture_id, topInnerMin, topInnerMax, slice.TopUV0, slice.TopUV1, col);
+    }
     AddImage(user_texture_id,
         bb.GetTR() - ImVec2(rightColWidth, 0.0f),
         bb.GetTR() + ImVec2(0.0f, slice.TopLeftOffset.y),
@@ -1486,28 +1512,53 @@ void ImDrawList::AddNineSlice(ImTextureID user_texture_id, const ImRect& bb, con
 
     // MID:
     const float bottomRowHeight = slice.Size.y - slice.TopLeftOffset.y - slice.InnerSize.y;
-    AddImage(user_texture_id,
-        bb.GetTL() + ImVec2(0.0f, slice.TopLeftOffset.y),
-        bb.GetBL() + ImVec2(slice.TopLeftOffset.x, -bottomRowHeight),
-        slice.MidLeftUV0, slice.MidLeftUV1, col);
-    AddImage(user_texture_id,
-        bb.GetTL() + slice.TopLeftOffset,
-        bb.GetBR() - ImVec2(rightColWidth, bottomRowHeight),
-        slice.MidUV0, slice.MidUV1, col);
-    AddImage(user_texture_id,
-        bb.GetTR() + ImVec2(-rightColWidth, slice.TopLeftOffset.y),
-        bb.GetBR() + ImVec2(0.0f, -bottomRowHeight),
-        slice.MidRightUV0, slice.MidRightUV1, col);
+    const ImVec2 leftInnerMin = bb.GetTL() + ImVec2(0.0f, slice.TopLeftOffset.y);
+    const ImVec2 leftInnerMax = bb.GetBL() + ImVec2(slice.TopLeftOffset.x, -bottomRowHeight);
+    if (bRepeatInner)
+    {
+        repeatInnerSegment(leftInnerMin, leftInnerMax, slice.MidLeftUV0, slice.MidLeftUV1, 1);
+    }
+    else
+    {
+        AddImage(user_texture_id, leftInnerMin, leftInnerMax, slice.MidLeftUV0, slice.MidLeftUV1, col);
+    }
+    const ImVec2 innerMin = bb.GetTL() + slice.TopLeftOffset;
+    const ImVec2 innerMax = bb.GetBR() - ImVec2(rightColWidth, bottomRowHeight);
+    if (bRepeatInner)
+    {
+        repeatInnerSegment(innerMin, innerMax, slice.MidUV0, slice.MidUV1, repeatInnerMidAxis);
+    }
+    else
+    {
+        AddImage(user_texture_id, innerMin, innerMax, slice.MidUV0, slice.MidUV1, col);
+    }
+    const ImVec2 rightInnerMin = bb.GetTR() + ImVec2(-rightColWidth, slice.TopLeftOffset.y);
+    const ImVec2 rightInnerMax = bb.GetBR() + ImVec2(0.0f, -bottomRowHeight);
+    if (bRepeatInner)
+    {
+        repeatInnerSegment(rightInnerMin, rightInnerMax, slice.MidRightUV0, slice.MidRightUV1, 1);
+    }
+    else
+    {
+        AddImage(user_texture_id, rightInnerMin, rightInnerMax, slice.MidRightUV0, slice.MidRightUV1, col);
+    }
 
     // BOTTOM:
     AddImage(user_texture_id,
         bb.GetBL() + ImVec2(0.0f, -bottomRowHeight),
         bb.GetBL() + ImVec2(slice.TopLeftOffset.x, 0),
         slice.BottomLeftUV0, slice.BottomLeftUV1, col);
-    AddImage(user_texture_id,
-        bb.GetBL() + ImVec2(slice.TopLeftOffset.x, -bottomRowHeight),
-        bb.GetBR() + ImVec2(-rightColWidth, 0),
-        slice.BottomUV0, slice.BottomUV1, col);
+
+    const ImVec2 bottomInnerMin = bb.GetBL() + ImVec2(slice.TopLeftOffset.x, -bottomRowHeight);
+    const ImVec2 bottomInnerMax = bb.GetBR() + ImVec2(-rightColWidth, 0);
+    if (bRepeatInner)
+    {
+        repeatInnerSegment(bottomInnerMin, bottomInnerMax, slice.BottomUV0, slice.BottomUV1, 0);
+    }
+    else
+    {
+        AddImage(user_texture_id, bottomInnerMin, bottomInnerMax, slice.BottomUV0, slice.BottomUV1, col);
+    }
     AddImage(user_texture_id,
         bb.GetBR() + ImVec2(-rightColWidth, -bottomRowHeight),
         bb.GetBR(),

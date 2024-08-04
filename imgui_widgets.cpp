@@ -6787,10 +6787,10 @@ bool ImGui::BeginTabBar(const char* str_id, ImGuiTabBarFlags flags, bool bBeginC
         window->DC.CursorPos.x, window->DC.CursorPos.y,
         window->WorkRect.Max.x, window->DC.CursorPos.y + lineHeight + (g.Style.ActiveTabNineSlice.Size.y - g.Style.ActiveTabNineSlice.InnerSize.y)
     );
-    window->DrawList->AddRectTransparent(tab_bar_bb.Min, tab_bar_bb.Max, GetColorU32(ImGuiCol_TabBar));
 
     if (bBeginChildWindow)
     {
+        window->DrawList->AddRectTransparent(tab_bar_bb.Min, tab_bar_bb.Max, GetColorU32(ImGuiCol_TabBar));
         BeginChildEx(str_id, window->GetID(str_id), childWindowSize, true,
             ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoClipping,
             tab_bar_bb.GetHeight());
