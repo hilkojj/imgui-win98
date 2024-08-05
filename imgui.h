@@ -1503,6 +1503,9 @@ struct ImGuiStyle
     ImVec2 CheckMarkUV0;
     ImVec2 CheckMarkUV1;
 
+    ImVec2 RadioButtonUV0;
+    ImVec2 RadioButtonUV1;
+
     struct NineSlice
     {
         ImVec2 TopLeftUV0, TopLeftUV1;
@@ -1522,6 +1525,10 @@ struct ImGuiStyle
 
     NineSlice ActiveTabNineSlice;
     NineSlice InactiveTabNineSlice;
+
+    NineSlice ButtonNineSlice;
+    NineSlice ActiveButtonNineSlice;
+    NineSlice DisabledButtonNineSlice;
 
     IMGUI_API ImGuiStyle();
     IMGUI_API void ScaleAllSizes(float scale_factor);

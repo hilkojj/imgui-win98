@@ -5203,46 +5203,14 @@ void ImGui::WinAddRect(const ImVec2& min, const ImVec2& max, ImU32 col, bool ins
     ImGuiStyle &style = ImGui::GetStyle();
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
-    draw_list->AddRectBordered(min, max, col, false, inset);
-
-    ImVec2 a(IM_ROUND(min.x), IM_ROUND(min.y));// + ImVec2(0.5f, 0.5f);
-    ImVec2 b(IM_ROUND(max.x), IM_ROUND(max.y));// - ImVec2(0.5f, 0.5f);
-
     if (outline)
     {
-        // top:
-        draw_list->PathLineTo(ImVec2(a.x, a.y - 1));
-        draw_list->PathLineTo(ImVec2(b.x, a.y - 1));
-        draw_list->PathStroke(outline, false, 1.0f);
-
-        // left:
-        draw_list->PathLineTo(ImVec2(a.x, a.y));
-        draw_list->PathLineTo(ImVec2(a.x, b.y));
-        draw_list->PathStroke(outline, false, 1.0f);
-
-        // right:
-        draw_list->PathLineTo(ImVec2(b.x + 1, a.y));
-        draw_list->PathLineTo(ImVec2(b.x + 1, b.y));
-        draw_list->PathStroke(outline, false, 1.0f);
-
-        if (!inset && !bDisabled)
-        {
-            draw_list->PathLineTo(ImVec2(b.x, a.y));
-            draw_list->PathLineTo(ImVec2(b.x, b.y));
-            draw_list->PathStroke(outline, false, 1.0f);
-        }
-
-        // bottom:
-        draw_list->PathLineTo(ImVec2(a.x, b.y));
-        draw_list->PathLineTo(ImVec2(b.x, b.y));
-        draw_list->PathStroke(outline, false, 1.0f);
-
-        if (!inset && !bDisabled)
-        {
-            draw_list->PathLineTo(ImVec2(a.x, b.y - 1.0f));
-            draw_list->PathLineTo(ImVec2(b.x, b.y - 1.0f));
-            draw_list->PathStroke(outline, false, 1.0f);
-        }
+        const ImGuiContext& g = *GImGui;
+        draw_list->AddNineSlice(g.IO.Fonts->TexID, ImRect(min, max), bDisabled ? style.DisabledButtonNineSlice : (inset ? style.ActiveButtonNineSlice : style.ButtonNineSlice), col);
+    }
+    else
+    {
+        draw_list->AddRectBordered(min, max, col, false, inset);
     }
 }
 
