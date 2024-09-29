@@ -178,6 +178,17 @@ typedef int ImGuiTreeNodeFlags;     // -> enum ImGuiTreeNodeFlags_   // Flags: f
 typedef int ImGuiWindowFlags;       // -> enum ImGuiWindowFlags_     // Flags: for Begin(), BeginChild()
 typedef int ImGuiButtonFlags;       // -> enum ImGuiButtonFlags_     // Flags: for ImageButton()    (dirty hack by hilkojj)
 
+enum ImGuiSFXType : int
+{
+    ImGuiSFXType_None,
+    ImGuiSFXType_ButtonPress,
+    ImGuiSFXType_ButtonRelease,
+    ImGuiSFXType_WindowAppear,
+    ImGuiSFXType_ModalAppear,
+};
+struct ImVec2;
+typedef void (*ImGuiSfxCallback)(ImGuiSFXType sfxType, const ImVec2 &screenPosition);
+
 // Other types
 #ifndef ImTextureID                 // ImTextureID [configurable type: override in imconfig.h with '#define ImTextureID xxx']
 typedef void* ImTextureID;          // User data for rendering back-end to identify a texture. This is whatever to you want it to be! read the FAQ about ImTextureID for details.
@@ -1574,6 +1585,8 @@ struct ImGuiIO
     bool        ConfigWindowsResizeFromEdges;   // = true           // Enable resizing of windows from their edges and from the lower-left corner. This requires (io.BackendFlags & ImGuiBackendFlags_HasMouseCursors) because it needs mouse cursor feedback. (This used to be a per-window ImGuiWindowFlags_ResizeFromAnySide flag)
     bool        ConfigWindowsMoveFromTitleBarOnly; // = false       // [BETA] Set to true to only allow moving windows when clicked+dragged from the title bar. Windows without a title bar are not affected.
     float       ConfigWindowsMemoryCompactTimer;// = 60.0f          // [BETA] Compact window memory usage when unused. Set to -1.0f to disable.
+
+    ImGuiSfxCallback sfxCallback;
 
     //------------------------------------------------------------------
     // Platform Functions

@@ -533,6 +533,15 @@ bool ImGui::ButtonBehavior(const ImRect& bb, ImGuiID id, bool* out_hovered, bool
             else if ((flags & ImGuiButtonFlags_MouseButtonRight) && g.IO.MouseReleased[1])  { mouse_button_released = 1; }
             else if ((flags & ImGuiButtonFlags_MouseButtonMiddle) && g.IO.MouseReleased[2]) { mouse_button_released = 2; }
 
+            if (mouse_button_clicked != -1 && GetIO().sfxCallback)
+            {
+                GetIO().sfxCallback(ImGuiSFXType_ButtonPress, bb.GetCenter());
+            }
+            if (mouse_button_released != -1 && GetIO().sfxCallback)
+            {
+                GetIO().sfxCallback(ImGuiSFXType_ButtonRelease, bb.GetCenter());
+            }
+
             if (mouse_button_clicked != -1 && g.ActiveId != id)
             {
                 if (flags & (ImGuiButtonFlags_PressedOnClickRelease | ImGuiButtonFlags_PressedOnClickReleaseAnywhere))
