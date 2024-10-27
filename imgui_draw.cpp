@@ -1467,7 +1467,7 @@ void ImDrawList::AddImageRounded(ImTextureID user_texture_id, const ImVec2& p_mi
         PopTextureID();
 }
 
-void ImDrawList::AddNineSlice(ImTextureID user_texture_id, const ImRect& bb, const ImGuiStyle::NineSlice &slice, const ImU32 col,
+void ImDrawList::AddNineSlice(ImTextureID user_texture_id, const ImRect& bb, const ImNineSlice &slice, const ImU32 col,
     const bool bRepeatInner, const int repeatInnerMidAxis)
 {
     auto repeatInnerSegment = [&] (const ImVec2 &innerMin, const ImVec2 &innerMax, const ImVec2 &uv0, const ImVec2 &uv1, const int axis)

@@ -1449,6 +1449,22 @@ struct ImVector
 // During the frame, use ImGui::PushStyleVar(ImGuiStyleVar_XXXX)/PopStyleVar() to alter the main style values,
 // and ImGui::PushStyleColor(ImGuiCol_XXX)/PopStyleColor() for colors.
 //-----------------------------------------------------------------------------
+struct ImNineSlice
+{
+    ImVec2 TopLeftUV0, TopLeftUV1;
+    ImVec2 TopUV0, TopUV1;
+    ImVec2 TopRightUV0, TopRightUV1;
+
+    ImVec2 MidLeftUV0, MidLeftUV1;
+    ImVec2 MidUV0, MidUV1;
+    ImVec2 MidRightUV0, MidRightUV1;
+
+    ImVec2 BottomLeftUV0, BottomLeftUV1;
+    ImVec2 BottomUV0, BottomUV1;
+    ImVec2 BottomRightUV0, BottomRightUV1;
+
+    ImVec2 Size, TopLeftOffset, InnerSize;
+};
 
 struct ImGuiStyle
 {
@@ -1517,29 +1533,12 @@ struct ImGuiStyle
     ImVec2 RadioButtonUV0;
     ImVec2 RadioButtonUV1;
 
-    struct NineSlice
-    {
-        ImVec2 TopLeftUV0, TopLeftUV1;
-        ImVec2 TopUV0, TopUV1;
-        ImVec2 TopRightUV0, TopRightUV1;
+    ImNineSlice ActiveTabNineSlice;
+    ImNineSlice InactiveTabNineSlice;
 
-        ImVec2 MidLeftUV0, MidLeftUV1;
-        ImVec2 MidUV0, MidUV1;
-        ImVec2 MidRightUV0, MidRightUV1;
-
-        ImVec2 BottomLeftUV0, BottomLeftUV1;
-        ImVec2 BottomUV0, BottomUV1;
-        ImVec2 BottomRightUV0, BottomRightUV1;
-
-        ImVec2 Size, TopLeftOffset, InnerSize;
-    };
-
-    NineSlice ActiveTabNineSlice;
-    NineSlice InactiveTabNineSlice;
-
-    NineSlice ButtonNineSlice;
-    NineSlice ActiveButtonNineSlice;
-    NineSlice DisabledButtonNineSlice;
+    ImNineSlice ButtonNineSlice;
+    ImNineSlice ActiveButtonNineSlice;
+    ImNineSlice DisabledButtonNineSlice;
 
     IMGUI_API ImGuiStyle();
     IMGUI_API void ScaleAllSizes(float scale_factor);
@@ -2184,7 +2183,7 @@ struct ImDrawList
     IMGUI_API void  AddImageQuad(ImTextureID user_texture_id, const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, const ImVec2& uv1 = ImVec2(0, 0), const ImVec2& uv2 = ImVec2(1, 0), const ImVec2& uv3 = ImVec2(1, 1), const ImVec2& uv4 = ImVec2(0, 1), ImU32 col = IM_COL32_WHITE);
     IMGUI_API void  AddImageRounded(ImTextureID user_texture_id, const ImVec2& p_min, const ImVec2& p_max, const ImVec2& uv_min, const ImVec2& uv_max, ImU32 col, float rounding, ImDrawCornerFlags rounding_corners = ImDrawCornerFlags_All);
 
-    IMGUI_API void  AddNineSlice(ImTextureID user_texture_id, const class ImRect& bb, const ImGuiStyle::NineSlice& slice, ImU32 col = IM_COL32_WHITE, bool bRepeatInner = false, int repeatInnerMidAxis = 1 /* for now tiling the middle is not supported, instead choose an axis to repeat the middle on */);
+    IMGUI_API void  AddNineSlice(ImTextureID user_texture_id, const class ImRect& bb, const ImNineSlice& slice, ImU32 col = IM_COL32_WHITE, bool bRepeatInner = false, int repeatInnerMidAxis = 1 /* for now tiling the middle is not supported, instead choose an axis to repeat the middle on */);
 
     // Stateful path API, add points then finish with PathFillConvex() or PathStroke()
     inline    void  PathClear()                                                 { _Path.Size = 0; }
