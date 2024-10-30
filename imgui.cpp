@@ -5509,12 +5509,12 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags, float 
         ImGuiPopupData& popup_ref = g.OpenPopupStack[g.BeginPopupStack.Size];
         window_just_activated_by_user |= (window->PopupId != popup_ref.PopupId); // We recycle popups so treat window as activated if popup id changed
         window_just_activated_by_user |= (window != popup_ref.Window);
-        if (window_just_activated_by_user && (flags & ImGuiWindowFlags_Modal))
+        if (GetIO().sfxCallback && window_just_activated_by_user && (flags & ImGuiWindowFlags_Modal))
         {
             GetIO().sfxCallback(ImGuiSFXType_ModalAppear, ImRect(window->Pos, window->Pos + window->Size).GetCenter());
         }
     }
-    else if (window_just_activated_by_user && (flags & (ImGuiWindowFlags_ChildWindow | ImGuiWindowFlags_Tooltip | ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_ChildMenu | ImGuiWindowFlags_NoMove)) == 0)
+    else if (GetIO().sfxCallback && window_just_activated_by_user && (flags & (ImGuiWindowFlags_ChildWindow | ImGuiWindowFlags_Tooltip | ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_ChildMenu | ImGuiWindowFlags_NoMove)) == 0)
     {
         GetIO().sfxCallback(ImGuiSFXType_WindowAppear, ImRect(window->Pos, window->Pos + window->Size).GetCenter());
     }
