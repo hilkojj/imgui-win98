@@ -208,7 +208,7 @@ void ImGui::StyleColorsLight(ImGuiStyle* dst)
 void ImGui::StyleWin98(ImGuiStyle* dst)
 {
     ImGuiStyle* style = dst ? dst : &ImGui::GetStyle();
-    style->FrameBorderSize = 1.0f;
+    style->FrameBorderSize = 2.0f;
     style->FramePadding = ImVec2(4.0f, 4.0f);
     style->WindowMenuButtonPosition = ImGuiDir_Right;
     style->ScrollbarSize = 16.0f;

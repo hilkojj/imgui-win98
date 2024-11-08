@@ -1353,7 +1353,11 @@ void ImGui::ProgressBar(float fraction, const ImVec2& size_arg, const char* over
     RenderFrame(bb.Min, bb.Max, GetColorU32(ImGuiCol_FrameBg), true, style.FrameRounding);
     bb.Expand(ImVec2(-style.FrameBorderSize, -style.FrameBorderSize));
     const ImVec2 fill_br = ImVec2(ImLerp(bb.Min.x, bb.Max.x, fraction), bb.Max.y);
+#ifdef WIN98_STYLE
+    WinAddRect(bb.Min, ImVec2(ImLerp(bb.Min.x, bb.Max.x, fraction), bb.Max.y), GetColorU32(ImGuiCol_PlotHistogram), false);
+#else
     RenderRectFilledRangeH(window->DrawList, bb, GetColorU32(ImGuiCol_PlotHistogram), 0.0f, fraction, style.FrameRounding);
+#endif
 
     // Default displaying the fraction as percentage string, but user can override it
     char overlay_buf[32];
