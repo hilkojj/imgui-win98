@@ -776,8 +776,8 @@ bool ImGui::ArrowButtonEx(const char* str_id, ImGuiDir dir, ImVec2 size, ImGuiBu
     const ImU32 bg_col = GetColorU32((held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
     const ImU32 text_col = GetColorU32(ImGuiCol_Text);
     RenderNavHighlight(bb, id);
-    RenderFrame(bb.Min, bb.Max, bg_col, true, g.Style.FrameRounding);
-    RenderArrow(window->DrawList, bb.Min + ImVec2(ImMax(0.0f, (size.x - g.FontSize) * 0.5f), ImMax(0.0f, (size.y - g.FontSize) * 0.5f)), text_col, dir);
+    RenderFrame(bb.Min, bb.Max, bg_col, true, g.Style.FrameRounding, false);
+    RenderArrow(window->DrawList, bb.Min + ImVec2(ImMax(0.0f, (size.x - g.FontSize) * 0.5f), ImMax(0.0f, (size.y - g.FontSize * 0.75f) * 0.5f)), text_col, dir, 0.75f);
 
     return pressed;
 }
@@ -1679,15 +1679,15 @@ bool ImGui::BeginCombo(const char* label, const char* preview_value, ImGuiComboF
     RenderNavHighlight(frame_bb, id);
     if (!(flags & ImGuiComboFlags_NoPreview))
         window->DrawList->AddRectFilled(frame_bb.Min, ImVec2(value_x2, frame_bb.Max.y), frame_col, style.FrameRounding, (flags & ImGuiComboFlags_NoArrowButton) ? ImDrawCornerFlags_All : ImDrawCornerFlags_Left);
+    RenderFrame(frame_bb.Min, frame_bb.Max, frame_col);
     if (!(flags & ImGuiComboFlags_NoArrowButton))
     {
-        ImU32 bg_col = GetColorU32((popup_open || hovered) ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
-        ImU32 text_col = GetColorU32(ImGuiCol_Text);
-        window->DrawList->AddRectFilled(ImVec2(value_x2, frame_bb.Min.y), frame_bb.Max, bg_col, style.FrameRounding, (w <= arrow_size) ? ImDrawCornerFlags_All : ImDrawCornerFlags_Right);
-        if (value_x2 + arrow_size - style.FramePadding.x <= frame_bb.Max.x)
-            RenderArrow(window->DrawList, ImVec2(value_x2 + style.FramePadding.y, frame_bb.Min.y + style.FramePadding.y), text_col, ImGuiDir_Down, 1.0f);
+        const float arrowBtnSize = frame_bb.GetHeight() - style.FrameBorderSize * 2.0f;
+        const ImVec2 cursorPos = ImGui::GetCursorPos();
+        ImGui::SetCursorScreenPos(frame_bb.Max - ImVec2(style.FrameBorderSize, style.FrameBorderSize) - ImVec2(arrowBtnSize, arrowBtnSize));
+        ImGui::ArrowButtonEx("DropDown", ImGuiDir_Down, ImVec2(arrowBtnSize, arrowBtnSize));
+        ImGui::SetCursorPos(cursorPos);
     }
-    RenderFrameBorder(frame_bb.Min, frame_bb.Max, style.FrameRounding);
     if (preview_value != NULL && !(flags & ImGuiComboFlags_NoPreview))
         RenderTextClipped(frame_bb.Min + style.FramePadding, ImVec2(value_x2, frame_bb.Max.y), preview_value, NULL, NULL, ImVec2(0.0f, 0.0f));
     if (label_size.x > 0)
